@@ -35,12 +35,6 @@
       .then(buffer => {
         const viewer = new IFCViewer(scene, camera);
         viewer.loadIFC(buffer);
-        var box = new THREE.Box3().setFromObject(scene);
-        var size = box.getSize(new THREE.Vector3());
-        var maxSize = Math.max(size.x, size.y, size.z);
-        camera.position.z = maxSize * 2;
-        controls.target.set(0, 0, 0);
-        controls.update();
       });
     
     function animate(){
