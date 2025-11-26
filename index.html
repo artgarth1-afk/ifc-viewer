@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>IFC Viewer</title>
+  <style>
+    body { margin: 0; }
+    #viewer-container { width: 100vw; height: 100vh; }
+  </style>
+  <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/web-ifc-viewer@latest/dist/ifc.min.js"></script>
+</head>
+<body>
+  <div id="viewer-container"></div>
+  <script>
+    const container = document.getElementById('viewer-container');
+    const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
+    viewer.axes.setAxes();
+    viewer.grid.setGrid();
+    viewer.IFC.loadIfcUrl("model.ifc");
+  </script>
+</body>
+</html>
