@@ -11,8 +11,8 @@
 
   <script type="module">
     (async () => {
-      // Импорт рабочей ESM сборки с jsDelivr (поддерживает CORS)
-      import { IfcViewerAPI } from 'https://cdn.jsdelivr.net/npm/web-ifc-viewer@1.0.174/dist/web-ifc-viewer.esm.js';
+      // Динамический импорт внутри асинхронной функции — исправляет ошибку "Unexpected token '{'"
+      const { IfcViewerAPI } = await import('https://cdn.jsdelivr.net/npm/web-ifc-viewer@1.0.174/dist/web-ifc-viewer.esm.js');
 
       const container = document.getElementById('viewer');
       const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
@@ -20,10 +20,19 @@
       viewer.axes.setAxes();
       viewer.grid.setGrid();
 
-      // Жёсткий абсолютный URL к wasm на jsDelivr (если CDN доступен)
-      // Если вы загрузили web-ifc.wasm в репозиторий, замените на viewer.IFC.loader.ifcManager.setWasmPath('./assets/');
-      viewer.IFC.loader.ifcManager.setWasmPath('./assets/');
+      // Сначала пробуем локальный файл wasm в папке assets, если нет — используем CDN
+      try {
+        const head = await fetch('./assets/web-ifc.wasm', { method: 'HEAD' });
+        if (head.ok) {
+          viewer.IFC.loader.ifcManager.setWasmPath('./assets/');
+        } else {
+          viewer.IFC.loader.ifcManager.setWasmUrl('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/web-ifc.wasm');
+        }
+      } catch (e) {
+        viewer.IFC.loader.ifcManager.setWasmUrl('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/web-ifc.wasm');
+      }
 
+      // Загружаем модель из корня репозитория
       try {
         await viewer.IFC.loadIfcUrl('./model.ifc');
         console.log('IFC загружен');
@@ -37,11 +46,10 @@
         msg.style.padding = '8px';
         msg.style.color = '#900';
         msg.style.zIndex = 9999;
-        msg.textContent = 'Ошибка загрузки IFC. Проверьте model.ifc и web-ifc.wasm.';
+        msg.textContent = 'Ошибка загрузки IFC. Проверьте model.ifc и assets/web-ifc.wasm.';
         document.body.appendChild(msg);
       }
     })();
   </script>
 </body>
 </html>
-
