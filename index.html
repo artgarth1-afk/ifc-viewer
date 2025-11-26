@@ -2,14 +2,43 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>IFC Viewer (bundled)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IFC BIM Viewer</title>
   <style>
-    html,body{height:100%;margin:0}
-    #viewer{width:100%;height:100%}
+    * { margin: 0; padding: 0; }
+    html, body { height: 100%; width: 100%; }
+    #viewer { width: 100%; height: 100%; }
+    #info {
+      position: fixed; top: 10px; left: 10px;
+      background: rgba(0, 0, 0, 0.8); color: white;
+      padding: 15px; border-radius: 5px; z-index: 10;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
+  <div id="info">
+    <strong>IFC Viewer</strong><br>
+    Кликайте на элементы<br>
+    Вращайте мышью
+  </div>
   <div id="viewer"></div>
-  <script type="module" src="/main.js"></script>
+
+  <script>
+    // ============ ЗАМЕНИТЕ ЭТОТ URL НА СВОЙ IFC ============
+    const ifcUrl = 'https://www.dropbox.com/scl/fi/39ww6aicc38hhwo4vn8we/Model.ifc?rlkey=oagsu1ikjwogdtha43hvrc0bh&st=j9txvk77&dl=1';
+    
+    // Используем готовый BIM-viewer сервис
+    const viewerUrl = `https://bimviewer.org/?file=${encodeURIComponent(ifcUrl)}`;
+    
+    document.getElementById('viewer').innerHTML = `
+      <iframe 
+        src="${viewerUrl}" 
+        style="width:100%; height:100%; border:none;"
+        allowfullscreen
+        allow="fullscreen">
+      </iframe>
+    `;
+  </script>
 </body>
 </html>
