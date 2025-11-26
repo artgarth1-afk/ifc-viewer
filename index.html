@@ -2,16 +2,13 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>3D Viewer</title>
+  <title>3D Model Viewer</title>
   <style>
-    body { margin: 0; overflow: hidden; font-family: Arial; }
+    body { margin: 0; overflow: hidden; }
     canvas { display: block; }
-    #loading { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-      background: rgba(0,0,0,0.8); color: white; padding: 30px; border-radius: 8px; z-index: 100; }
   </style>
 </head>
 <body>
-  <div id="loading">Загрузка модели...</div>
   <canvas id="c"></canvas>
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -39,7 +36,7 @@
     controls.dampingFactor = 0.05;
     
     let loader = new THREE.GLTFLoader();
-    loader.load('./Model.glb', (gltf) => {
+    loader.load('https://raw.githubusercontent.com/artgarth1-afk/ifc-viewer/main/Model.glb', (gltf) => {
       let model = gltf.scene;
       scene.add(model);
       
@@ -53,11 +50,6 @@
       
       controls.target.set(0, 0, 0);
       controls.update();
-      
-      document.getElementById('loading').style.display = 'none';
-    }, undefined, (error) => {
-      document.getElementById('loading').innerHTML = 'Ошибка загрузки: ' + error.message;
-      console.error(error);
     });
     
     function animate() {
