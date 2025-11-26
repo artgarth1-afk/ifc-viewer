@@ -5,27 +5,19 @@
   <title>IFC Viewer</title>
   <style>
     body { margin: 0; }
-    #viewer-container { width: 100vw; height: 100vh; }
+    #viewer { width: 100vw; height: 100vh; }
   </style>
-  <!-- Подключаем библиотеки напрямую с CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.150.0/build/three.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@ifcjs/viewer@latest/dist/ifc.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.125/dist/ifc-viewer-api.js"></script>
 </head>
 <body>
-  <div id="viewer-container"></div>
+  <div id="viewer"></div>
   <script>
-    // Проверяем, что библиотека загрузилась
-    if (typeof IfcViewerAPI === 'undefined') {
-      document.body.innerHTML = "<h2>Ошибка: IFC.js не загрузился</h2>";
-    } else {
-      const container = document.getElementById('viewer-container');
-      const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
-      viewer.axes.setAxes();
-      viewer.grid.setGrid();
-      // Загружаем модель из репозитория
-      viewer.IFC.loadIfcUrl("https://artgarth1-afk.github.io/ifc-viewer/model.ifc");
-    }
+    const container = document.getElementById('viewer');
+    const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
+    viewer.axes.setAxes();
+    viewer.grid.setGrid();
+    viewer.IFC.loadIfcUrl('model.ifc');
   </script>
 </body>
 </html>
-
