@@ -10,12 +10,11 @@
   <!-- Подключаем three.js -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
   <!-- Подключаем IFC Viewer API -->
-  <script src="https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.125/dist/ifc-viewer-api.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/web-ifc-viewer@1.0.174/dist/ifc-viewer-api.js"></script>
 </head>
 <body>
   <div id="viewer"></div>
   <script>
-    // Этот код выполняется только после загрузки скриптов выше
     const container = document.getElementById('viewer');
     const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
     viewer.axes.setAxes();
