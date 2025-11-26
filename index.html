@@ -10,6 +10,7 @@
 <body>
   <canvas id="renderCanvas"></canvas>
   <script src="https://cdn.babylonjs.com/babylon.js"></script>
+  <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
   <script>
     var canvas = document.getElementById("renderCanvas");
     var engine = new BABYLON.Engine(canvas, true);
@@ -23,11 +24,13 @@
     light.intensity = 0.9;
     
     BABYLON.SceneLoader.ImportMesh("", "", "https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/Model.glb", scene, function(meshes) {
-      var bbox = BABYLON.BoundingInfo.GetBoundingBoxFromMeshes(meshes);
-      var size = bbox.maximum.subtract(bbox.minimum);
-      var maxSize = Math.max(size.x, size.y, size.z);
-      var scale = 5 / maxSize;
-      meshes.forEach(m => m.scaling = new BABYLON.Vector3(scale, scale, scale));
+      if(meshes.length > 0) {
+        var bbox = BABYLON.BoundingInfo.GetBoundingBoxFromMeshes(meshes);
+        var size = bbox.maximum.subtract(bbox.minimum);
+        var maxSize = Math.max(size.x, size.y, size.z);
+        var scale = 5 / maxSize;
+        meshes.forEach(m => m.scaling = new BABYLON.Vector3(scale, scale, scale));
+      }
     });
     
     engine.runRenderLoop(function () {
