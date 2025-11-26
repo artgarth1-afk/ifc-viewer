@@ -15,11 +15,12 @@
 <body>
   <div id="viewer"></div>
   <script>
+    // Этот код выполняется только после загрузки скриптов выше
     const container = document.getElementById('viewer');
     const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
     viewer.axes.setAxes();
     viewer.grid.setGrid();
-    viewer.IFC.loadIfcUrl('model.ifc'); // файл должен лежать рядом с index.html
+    viewer.IFC.loadIfcUrl('model.ifc'); // файл рядом с index.html
   </script>
 </body>
 </html>
