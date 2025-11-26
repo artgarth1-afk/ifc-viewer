@@ -12,21 +12,25 @@
 <body>
   <div id="viewer"></div>
 
-  <!-- ВАЖНО: только один модульный скрипт; никаких других <script src=...> для ifc -->
   <script type="module">
-    // Импортируем ESM-версию прямо из CDN
+    // Импорт только viewer (three лишний — он подтянется внутри)
     import { IfcViewerAPI } from 'https://esm.sh/web-ifc-viewer@1.0.174';
-    // Если нужен three — web-ifc-viewer подтянет его как зависимость,
-    // но можно явно импортировать совместимую версию:
-    // import * as THREE from 'https://esm.sh/three@0.149.0';
 
     const container = document.getElementById('viewer');
     const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
     viewer.axes.setAxes();
     viewer.grid.setGrid();
 
-    // Файл модели должен лежать рядом с index.html
-    viewer.IFC.loadIfcUrl('./model.ifc');
+    // КРИТИЧНО: явный путь к web-ifc.wasm
+    // Вариант 1: CDN (не требует добавления файла в репозиторий)
+    viewer.IFC.loader.ifcManager.setWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/');
+
+    // Вариант 2 (альтернативный, если захочешь хранить wasm у себя):
+    // Положи web-ifc.wasm рядом с index.html и укажи:
+    // viewer.IFC.loader.ifcManager.setWasmPath('./');
+
+    // Загружаем модель из корня
+    await viewer.IFC.loadIfcUrl('./model.ifc');
   </script>
 </body>
 </html>
