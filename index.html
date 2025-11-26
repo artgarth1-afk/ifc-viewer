@@ -23,15 +23,20 @@
     var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 1));
     light.intensity = 0.9;
     
-    BABYLON.SceneLoader.ImportMesh("", "", "https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/Model.glb", scene, function(meshes) {
-      if(meshes.length > 0) {
-        var bbox = BABYLON.BoundingInfo.GetBoundingBoxFromMeshes(meshes);
-        var size = bbox.maximum.subtract(bbox.minimum);
-        var maxSize = Math.max(size.x, size.y, size.z);
-        var scale = 5 / maxSize;
-        meshes.forEach(m => m.scaling = new BABYLON.Vector3(scale, scale, scale));
-      }
-    });
+    fetch("https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/Model.glb")
+      .then(r => r.blob())
+      .then(blob => {
+        var url = URL.createObjectURL(blob);
+        BABYLON.SceneLoader.ImportMesh("", "", url, scene, function(meshes) {
+          if(meshes.length > 0) {
+            var bbox = BABYLON.BoundingInfo.GetBoundingBoxFromMeshes(meshes);
+            var size = bbox.maximum.subtract(bbox.minimum);
+            var maxSize = Math.max(size.x, size.y, size.z);
+            var scale = 5 / maxSize;
+            meshes.forEach(m => m.scaling = new BABYLON.Vector3(scale, scale, scale));
+          }
+        });
+      });
     
     engine.runRenderLoop(function () {
       scene.render();
