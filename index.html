@@ -14,15 +14,13 @@
 <body>
   <div id="viewer-container"></div>
   <script>
-    const container = document.getElementById('viewer-container');
-    const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
-    viewer.axes.setAxes();
-    viewer.grid.setGrid();
-    viewer.IFC.loadIfcUrl("model.ifc");
+    document.addEventListener("DOMContentLoaded", () => {
+      const container = document.getElementById('viewer-container');
+      const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
+      viewer.axes.setAxes();
+      viewer.grid.setGrid();
+      viewer.IFC.loadIfcUrl("model.ifc");
+    });
   </script>
 </body>
 </html>
-
-
-
-
