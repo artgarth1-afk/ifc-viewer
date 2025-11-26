@@ -3,52 +3,58 @@
 <head>
   <meta charset="UTF-8">
   <style>
-    body { margin: 0; }
-    canvas { display: block; width: 100%; height: 100vh; }
+    body { margin: 0; overflow: hidden; }
+    canvas { display: block; }
   </style>
 </head>
 <body>
   <canvas id="canvas"></canvas>
-  <script async src="https://cdn.jsdelivr.net/npm/three@r128/build/three.min.js"></script>
-  <script async src="https://cdn.jsdelivr.net/npm/web-ifc@0.0.44/web-ifc-api.js"></script>
-  <script async src="https://cdn.jsdelivr.net/npm/three/examples/js/controls/OrbitControls.js"></script>
-  <script async src="https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.130/dist/web-ifc-three.umd.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://unpkg.com/web-ifc@0.0.44/web-ifc-api.js"></script>
+  <script src="https://unpkg.com/web-ifc-three@0.0.130/dist/web-ifc-three.umd.js"></script>
   
   <script>
-    setTimeout(function(){
-      var scene = new THREE.Scene();
-      var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-      var renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas'), antialias: true});
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      camera.position.z = 50;
-      
-      var light = new THREE.DirectionalLight(0xffffff, 1);
-      light.position.set(5, 10, 7);
-      scene.add(light);
-      scene.add(new THREE.AmbientLight(0xffffff, 0.7));
-      
-      var controls = new THREE.OrbitControls(camera, renderer.domElement);
-      
-      fetch('https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/Model.ifc')
-        .then(r => r.arrayBuffer())
-        .then(buffer => {
-          const viewer = new IFCViewer(scene, camera);
-          viewer.loadIFC(buffer);
-        });
-      
-      function animate(){
-        requestAnimationFrame(animate);
+    var scene = new THREE.Scene();
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    var renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas'), antialias: true});
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    camera.position.set(0, 0, 50);
+    
+    var light = new THREE.DirectionalLight(0xffffff, 1.5);
+    light.position.set(5, 10, 7);
+    scene.add(light);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    
+    var controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    
+    fetch('https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/Model.ifc')
+      .then(r => r.arrayBuffer())
+      .then(buffer => {
+        const viewer = new IFCViewer(scene, camera);
+        viewer.loadIFC(buffer);
+        var box = new THREE.Box3().setFromObject(scene);
+        var size = box.getSize(new THREE.Vector3());
+        var maxSize = Math.max(size.x, size.y, size.z);
+        camera.position.z = maxSize * 2;
+        controls.target.set(0, 0, 0);
         controls.update();
-        renderer.render(scene, camera);
-      }
-      animate();
-      
-      window.addEventListener('resize', function(){
-        camera.aspect = window.innerWidth/window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
       });
-    }, 2000);
+    
+    function animate(){
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+    
+    window.addEventListener('resize', function(){
+      camera.aspect = window.innerWidth/window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
   </script>
 </body>
 </html>
