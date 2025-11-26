@@ -22,7 +22,7 @@
 
       // Жёсткий абсолютный URL к wasm на jsDelivr (если CDN доступен)
       // Если вы загрузили web-ifc.wasm в репозиторий, замените на viewer.IFC.loader.ifcManager.setWasmPath('./assets/');
-      viewer.IFC.loader.ifcManager.setWasmUrl('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/web-ifc.wasm');
+      viewer.IFC.loader.ifcManager.setWasmPath('./assets/');
 
       try {
         await viewer.IFC.loadIfcUrl('./model.ifc');
@@ -44,3 +44,4 @@
   </script>
 </body>
 </html>
+
