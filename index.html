@@ -1,26 +1,59 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>IFC Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body { margin: 0; }
+    html, body { margin: 0; height: 100%; }
     #viewer { width: 100vw; height: 100vh; }
   </style>
-  <!-- Подключаем three.js -->
+  <!-- three.js (безопасно подключить заранее) -->
   <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-  <!-- Подключаем IFC Viewer API -->
-  <script src="https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.125/dist/ifc-viewer-api.js"></script>
+
+  <!-- ПЕРВЫЙ CDN: jsDelivr -->
+  <script id="ifcjs-primary"
+          src="https://cdn.jsdelivr.net/npm/web-ifc-viewer@1.0.174/dist/ifc-viewer-api.js"
+          defer></script>
+
+  <!-- ВТОРОЙ CDN (фолбэк): unpkg — подключится динамически, если первый не даст IfcViewerAPI -->
+  <script>
+    // Дожидаемся полной загрузки всех <script defer>
+    window.addEventListener('DOMContentLoaded', function () {
+      function ready() { return typeof window.IfcViewerAPI === 'function'; }
+
+      function initViewer() {
+        if (!ready()) {
+          console.error('IfcViewerAPI не доступен после загрузки CDN.');
+          return;
+        }
+        const container = document.getElementById('viewer');
+        const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
+        viewer.axes.setAxes();
+        viewer.grid.setGrid();
+        viewer.IFC.loadIfcUrl('model.ifc'); // model.ifc должен лежать рядом с index.html
+      }
+
+      // Если первый CDN дал класс — стартуем, иначе пробуем фолбэк
+      if (ready()) {
+        initViewer();
+      } else {
+        const fallback = document.createElement('script');
+        fallback.src = 'https://unpkg.com/web-ifc-viewer@1.0.174/dist/ifc-viewer-api.js';
+        fallback.defer = true;
+        fallback.onload = function () {
+          if (ready()) initViewer();
+          else console.error('Фолбэк CDN загрузился, но IfcViewerAPI по-прежнему не определён.');
+        };
+        fallback.onerror = function () {
+          console.error('Не удалось загрузить библиотеку IFC Viewer ни с jsDelivr, ни с unpkg.');
+        };
+        document.head.appendChild(fallback);
+      }
+    });
+  </script>
 </head>
 <body>
   <div id="viewer"></div>
-  <script>
-    // Теперь класс IfcViewerAPI доступен глобально
-    const container = document.getElementById('viewer');
-    const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
-    viewer.axes.setAxes();
-    viewer.grid.setGrid();
-    viewer.IFC.loadIfcUrl('model.ifc'); // файл должен лежать рядом с index.html
-  </script>
 </body>
 </html>
