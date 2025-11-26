@@ -12,10 +12,13 @@
 <body>
   <div id="viewer"></div>
 
-  <!-- ВАЖНО: импорт через ESM CDN -->
+  <!-- ВАЖНО: только один модульный скрипт; никаких других <script src=...> для ifc -->
   <script type="module">
-    // Импортируем API прямо из ESM CDN
-    import { IfcViewerAPI } from 'https://esm.run/web-ifc-viewer@1.0.174';
+    // Импортируем ESM-версию прямо из CDN
+    import { IfcViewerAPI } from 'https://esm.sh/web-ifc-viewer@1.0.174';
+    // Если нужен three — web-ifc-viewer подтянет его как зависимость,
+    // но можно явно импортировать совместимую версию:
+    // import * as THREE from 'https://esm.sh/three@0.149.0';
 
     const container = document.getElementById('viewer');
     const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
