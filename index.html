@@ -22,7 +22,7 @@
     var light = new BABYLON.HemisphericLight("light", new BABYLON.Vector3(1, 1, 1));
     light.intensity = 0.9;
     
-    BABYLON.SceneLoader.ImportMesh("", "", "https://raw.githubusercontent.com/artgarth1-afk/ifc-viewer/main/Model.glb", scene, function(meshes) {
+    BABYLON.SceneLoader.ImportMesh("", "", "https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/Model.glb", scene, function(meshes) {
       var bbox = BABYLON.BoundingInfo.GetBoundingBoxFromMeshes(meshes);
       var size = bbox.maximum.subtract(bbox.minimum);
       var maxSize = Math.max(size.x, size.y, size.z);
