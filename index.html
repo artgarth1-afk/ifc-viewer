@@ -39,7 +39,7 @@
     controls.dampingFactor = 0.05;
     
     let loader = new THREE.GLTFLoader();
-    loader.load('https://www.dropbox.com/scl/fi/tvfn6x3phcdml67kyth3r/Model.glb?rlkey=8hhz4ili6uehn20p2zgp7e438&st=rmtuvdw6&dl=1', (gltf) => {
+    loader.load('./Model.glb', (gltf) => {
       let model = gltf.scene;
       scene.add(model);
       
@@ -55,6 +55,9 @@
       controls.update();
       
       document.getElementById('loading').style.display = 'none';
+    }, undefined, (error) => {
+      document.getElementById('loading').innerHTML = 'Ошибка загрузки: ' + error.message;
+      console.error(error);
     });
     
     function animate() {
