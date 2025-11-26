@@ -9,14 +9,11 @@
   </style>
   <!-- Подключаем библиотеки -->
   <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/web-ifc-viewer@latest/dist/ifc.min.js"></script>
+  <script src="https://unpkg.com/web-ifc-viewer@1.0.218/dist/ifc.min.js"></script>
 </head>
 <body>
   <div id="viewer-container"></div>
   <script>
-    // Проверяем, что библиотека загрузилась
-    console.log("IfcViewerAPI:", typeof IfcViewerAPI);
-
     const container = document.getElementById('viewer-container');
     const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
     viewer.axes.setAxes();
@@ -25,5 +22,7 @@
   </script>
 </body>
 </html>
+
+
 
 
