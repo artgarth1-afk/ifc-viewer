@@ -1,32 +1,27 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="utf-8" />
   <title>IFC Viewer</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    html, body { margin: 0; height: 100%; }
-    #viewer { width: 100vw; height: 100vh; }
-  </style>
+  <style>html,body{margin:0;height:100%}#viewer{width:100vw;height:100vh}</style>
 </head>
 <body>
   <div id="viewer"></div>
-
-  <!-- ВАЖНО: только ESM, без других <script src=...> -->
   <script type="module">
-    // Импортируем ESM-версию viewer. Не добавляй отдельный three — он подтянется внутри.
     import { IfcViewerAPI } from 'https://esm.sh/web-ifc-viewer@1.0.174';
-
     const container = document.getElementById('viewer');
     const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
-    viewer.axes.setAxes();
-    viewer.grid.setGrid();
-
-    // Задаём корректный путь к WASM (jsDelivr). Это устраняет 404 и "fs" ошибки.
+    viewer.axes.setAxes(); viewer.grid.setGrid();
+    // Используем CDN‑директорию для wasm
     viewer.IFC.loader.ifcManager.setWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/');
-
-    // Загружаем модель (лежит рядом с index.html)
-    await viewer.IFC.loadIfcUrl('./model.ifc');
+    try {
+      await viewer.IFC.loadIfcUrl('./model.ifc');
+      console.log('IFC загружен');
+    } catch (e) {
+      console.error('Ошибка загрузки IFC:', e);
+      document.body.insertAdjacentHTML('beforeend','<div style="position:fixed;left:8px;top:8px;background:#fff;padding:8px;color:#900;z-index:9999">Ошибка загрузки IFC. Проверьте model.ifc и доступность CDN.</div>');
+    }
   </script>
 </body>
 </html>
