@@ -8,35 +8,25 @@
     html, body { margin: 0; height: 100%; }
     #viewer { width: 100vw; height: 100vh; }
   </style>
-  <!-- ОДНА сборка three.js -->
-  <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
-  <!-- UMD-версия viewer, без ESM (чтобы не было “import outside module”) -->
-  <script src="https://cdn.jsdelivr.net/npm/web-ifc-viewer@1.0.174/dist/ifc-viewer-api.js"></script>
 </head>
 <body>
   <div id="viewer"></div>
-  <script>
-    // Если класс не виден — сразу логируем и выходим
-    if (typeof window.IfcViewerAPI !== 'function') {
-      console.error('IfcViewerAPI не доступен (скрипт viewer не загрузился).');
-    } else {
-      const container = document.getElementById('viewer');
-      const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
-      viewer.axes.setAxes();
-      viewer.grid.setGrid();
 
-      // КРИТИЧНО: явный путь к WASM, чтобы не было 404
-      // Судя по твоим логам, библиотека пытается 0.0.33. Ставим тот же номер:
-      viewer.IFC.loader.ifcManager.setWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.33/');
+  <!-- ВАЖНО: только ESM, без других <script src=...> -->
+  <script type="module">
+    // Импортируем ESM-версию viewer. Не добавляй отдельный three — он подтянется внутри.
+    import { IfcViewerAPI } from 'https://esm.sh/web-ifc-viewer@1.0.174';
 
-      // Если всё равно будет 404 — переключи на актуальную версию:
-      // viewer.IFC.loader.ifcManager.setWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/');
+    const container = document.getElementById('viewer');
+    const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
+    viewer.axes.setAxes();
+    viewer.grid.setGrid();
 
-      // Загрузка модели (лежит рядом с index.html)
-      viewer.IFC.loadIfcUrl('./model.ifc').catch((e) => {
-        console.error('Ошибка загрузки IFC:', e);
-      });
-    }
+    // Задаём корректный путь к WASM (jsDelivr). Это устраняет 404 и "fs" ошибки.
+    viewer.IFC.loader.ifcManager.setWasmPath('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/');
+
+    // Загружаем модель (лежит рядом с index.html)
+    await viewer.IFC.loadIfcUrl('./model.ifc');
   </script>
 </body>
 </html>
