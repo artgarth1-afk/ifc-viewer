@@ -9,18 +9,16 @@
   </style>
   <!-- Подключаем библиотеки -->
   <script src="https://unpkg.com/three@0.150.0/build/three.min.js"></script>
-  <script src="https://unpkg.com/web-ifc-viewer@1.0.218/dist/ifc.min.js"></script>
+  <script src="https://unpkg.com/@ifcjs/viewer@latest/dist/ifc.min.js"></script>
 </head>
 <body>
   <div id="viewer-container"></div>
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const container = document.getElementById('viewer-container');
-      const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
-      viewer.axes.setAxes();
-      viewer.grid.setGrid();
-      viewer.IFC.loadIfcUrl("model.ifc");
-    });
+    const container = document.getElementById('viewer-container');
+    const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
+    viewer.axes.setAxes();
+    viewer.grid.setGrid();
+    viewer.IFC.loadIfcUrl("model.ifc");
   </script>
 </body>
 </html>
