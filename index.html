@@ -12,14 +12,14 @@
   <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
   <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
   <script src="https://unpkg.com/web-ifc@0.0.44/web-ifc-api.js"></script>
-  <script src="https://unpkg.com/web-ifc-three@0.0.130/dist/web-ifc-three.umd.js"></script>
+  <script src="https://unpkg.com/web-ifc-three/dist/web-ifc-three.umd.js"></script>
   
   <script>
     var scene = new THREE.Scene();
-    var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    var camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 10000);
     var renderer = new THREE.WebGLRenderer({canvas: document.getElementById('canvas'), antialias: true});
     renderer.setSize(window.innerWidth, window.innerHeight);
-    camera.position.set(0, 0, 50);
+    camera.position.set(0, 0, 100);
     
     var light = new THREE.DirectionalLight(0xffffff, 1.5);
     light.position.set(5, 10, 7);
@@ -30,12 +30,16 @@
     controls.enableDamping = true;
     controls.dampingFactor = 0.05;
     
-    fetch('https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/Model.ifc')
+    fetch('./model.ifc')
       .then(r => r.arrayBuffer())
       .then(buffer => {
-        const viewer = new IFCViewer(scene, camera);
-        viewer.loadIFC(buffer);
-      });
+        const ifcLoader = new IFCLoader();
+        ifcLoader.ifcManager.setWasmPath("https://unpkg.com/web-ifc@0.0.44/");
+        ifcLoader.load(buffer, (ifcModel) => {
+          scene.add(ifcModel.mesh);
+        });
+      })
+      .catch(e => console.error("Ошибка загрузки:", e));
     
     function animate(){
       requestAnimationFrame(animate);
