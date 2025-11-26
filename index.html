@@ -8,21 +8,29 @@
 </head>
 <body>
   <div id="viewer"></div>
+
   <script type="module">
-    import { IfcViewerAPI } from 'https://esm.sh/web-ifc-viewer@1.0.174';
+    // Надёжный ESM импорт — используем unpkg, чтобы избежать переписывания путей
+    import { IfcViewerAPI } from 'https://unpkg.com/web-ifc-viewer@1.0.174/dist/web-ifc-viewer.esm.js';
+
     const container = document.getElementById('viewer');
     const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
-    viewer.axes.setAxes(); viewer.grid.setGrid();
-    // Используем CDN‑директорию для wasm
-    viewer.IFC.loader.ifcManager.setWasmPath('./assets/');
+
+    viewer.axes.setAxes();
+    viewer.grid.setGrid();
+
+    // Жёсткий абсолютный URL к wasm — это убирает любую "склейку" путей
+    // Если CDN недоступен, позже можно загрузить web-ifc.wasm в репо и заменить на './assets/'
+    viewer.IFC.loader.ifcManager.setWasmUrl('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/web-ifc.wasm');
+
     try {
       await viewer.IFC.loadIfcUrl('./model.ifc');
       console.log('IFC загружен');
     } catch (e) {
       console.error('Ошибка загрузки IFC:', e);
-      document.body.insertAdjacentHTML('beforeend','<div style="position:fixed;left:8px;top:8px;background:#fff;padding:8px;color:#900;z-index:9999">Ошибка загрузки IFC. Проверьте model.ifc и доступность CDN.</div>');
+      document.body.insertAdjacentHTML('beforeend',
+        '<div style="position:fixed;left:8px;top:8px;background:#fff;padding:8px;color:#900;z-index:9999">Ошибка загрузки IFC. Проверьте model.ifc и web-ifc.wasm.</div>');
     }
   </script>
 </body>
 </html>
-
