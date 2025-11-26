@@ -1,5 +1,3 @@
-import { IfcViewerAPI } from '@ifcjs/viewer';
-
 const container = document.getElementById('viewer');
 const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
 
