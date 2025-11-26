@@ -10,7 +10,7 @@
   <div id="viewer"></div>
 
   <script type="module">
-    // Надёжный ESM импорт — используем unpkg, чтобы избежать переписывания путей
+    // Надёжная ESM сборка (dist) — не esm.sh
     import { IfcViewerAPI } from 'https://unpkg.com/web-ifc-viewer@1.0.174/dist/web-ifc-viewer.esm.js';
 
     const container = document.getElementById('viewer');
@@ -19,9 +19,12 @@
     viewer.axes.setAxes();
     viewer.grid.setGrid();
 
-    // Жёсткий абсолютный URL к wasm — это убирает любую "склейку" путей
-    // Если CDN недоступен, позже можно загрузить web-ifc.wasm в репо и заменить на './assets/'
+    // Вариант A (быстро): абсолютный CDN URL к wasm
     viewer.IFC.loader.ifcManager.setWasmUrl('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/web-ifc.wasm');
+
+    // Вариант B (надежнее): если загрузил web-ifc.wasm в репо в assets,
+    // раскомментируй следующую строку и закомментируй setWasmUrl выше:
+    // viewer.IFC.loader.ifcManager.setWasmPath('./assets/');
 
     try {
       await viewer.IFC.loadIfcUrl('./model.ifc');
