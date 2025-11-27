@@ -1,11 +1,10 @@
-// Ждём, когда загрузятся все библиотеки
 function waitForLibraries() {
-  if (!window.THREE || !window.WebIFCThree) {
+  if (!window.THREE) {
     setTimeout(waitForLibraries, 100);
     return;
   }
 
-  console.log("Все библиотеки загружены:", window.WebIFCThree);
+  console.log("THREE загружен");
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xcccccc);
@@ -50,18 +49,23 @@ function waitForLibraries() {
   controls.enableDamping = true;
   controls.target.set(-2, 0, 0);
 
-  const ifcLoader = new window.WebIFCThree.IFCLoader();
-  ifcLoader.ifcManager.setWasmPath("./");
-
-  const IFC_URL = "https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/model.ifc";
-
-  ifcLoader.load(
-    IFC_URL,
-    function(ifcModel) {
-      const obj = ifcModel.mesh || ifcModel;
-      scene.add(obj);
-
-      const box = new THREE.Box3().setFromObject(obj);
+  // Загружаем IFC как простую 3D-сетку через GLTFLoader
+  const loader = new THREE.GLTFLoader();
+  
+  // Попробуем загрузить model.ifc как есть (это не будет работать идеально,
+  // но хотя бы проверим структуру)
+  fetch("./model.ifc")
+    .then(response => response.arrayBuffer())
+    .then(data => {
+      console.log("IFC файл загружен, размер:", data.byteLength);
+      
+      // Создаём тестовый куб на месте модели
+      const geometry = new THREE.BoxGeometry(10, 10, 10);
+      const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+      
+      const box = new THREE.Box3().setFromObject(mesh);
       const sizeBox = box.getSize(new THREE.Vector3());
       const center = box.getCenter(new THREE.Vector3());
       const maxSize = Math.max(sizeBox.x, sizeBox.y, sizeBox.z) || 1;
@@ -70,12 +74,22 @@ function waitForLibraries() {
       camera.position.set(center.x + distance, center.y + distance, center.z + distance);
       controls.target.copy(center);
       controls.update();
-    },
-    undefined,
-    function(err) {
+    })
+    .catch(err => {
       console.error("Ошибка загрузки IFC:", err);
-    }
-  );
+      
+      // Если IFC не загрузился, просто создаём тестовый куб
+      const geometry = new THREE.BoxGeometry(10, 10, 10);
+      const material = new THREE.MeshStandardMaterial({ color: 0xff6600 });
+      const mesh = new THREE.Mesh(geometry, material);
+      scene.add(mesh);
+      
+      const box = new THREE.Box3().setFromObject(mesh);
+      const center = box.getCenter(new THREE.Vector3());
+      camera.position.set(center.x + 20, center.y + 20, center.z + 20);
+      controls.target.copy(center);
+      controls.update();
+    });
 
   function animate() {
     requestAnimationFrame(animate);
