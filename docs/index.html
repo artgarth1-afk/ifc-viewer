@@ -45,40 +45,49 @@
 
     const entities = [];
 
-    // В 0.0.74 GetGeometry возвращает ClassHandle с коллекцией geometries
-    const geomRoot = ifcAPI.GetGeometry(modelID);
-    console.log("geomRoot:", geomRoot);
+    // Получаем максимальный expressID
+    const maxID = ifcAPI.GetMaxExpressID(modelID);
+    console.log("Max expressID:", maxID);
 
-    if (geomRoot && geomRoot.geometries) {
-      for (const g of geomRoot.geometries) {
-        const positions = ifcAPI.GetVertexArray(modelID, g.geometryExpressID);
-        const indices = ifcAPI.GetIndexArray(modelID, g.geometryExpressID);
-
-        if (!positions || !indices || !positions.length || !indices.length) continue;
-
-        const color = palette[g.expressID % palette.length];
-        const meshId = "geom_" + g.geometryExpressID;
-
-        viewer.scene.addMesh({
-          id: meshId,
-          positions,
-          indices,
-          color,
-          isObject: true
-        });
-
-        try {
-          const props = ifcAPI.GetLine(modelID, g.expressID);
-          entities.push({ id: meshId, props });
-        } catch (_) {}
+    // Перебираем все элементы
+    for (let expressID = 1; expressID <= maxID; expressID++) {
+      let geomData;
+      try {
+        geomData = ifcAPI.GetGeometry(modelID, expressID);
+      } catch {
+        continue; // элемент без геометрии
       }
-    } else {
-      document.getElementById("info").innerText = "Не удалось получить список геометрий из API.";
+      if (!geomData || typeof geomData.geometryExpressID !== "number") continue;
+
+      const geomID = geomData.geometryExpressID;
+
+      const positions = ifcAPI.GetVertexArray(modelID, geomID);
+      const indices = ifcAPI.GetIndexArray(modelID, geomID);
+
+      if (!positions || !indices || !positions.length || !indices.length) continue;
+
+      const color = palette[expressID % palette.length];
+      const meshId = "geom_" + geomID;
+
+      viewer.scene.addMesh({
+        id: meshId,
+        positions,
+        indices,
+        color,
+        isObject: true
+      });
+
+      try {
+        const props = ifcAPI.GetLine(modelID, expressID);
+        entities.push({ id: meshId, props });
+      } catch (_) {}
     }
 
     if (viewer.scene.meshes.length > 0) {
       viewer.cameraFlight.flyTo(viewer.scene.getAABB());
       document.getElementById("info").innerText = "Модель загружена. Кликни по элементу, чтобы увидеть свойства.";
+    } else {
+      document.getElementById("info").innerText = "Геометрия не найдена или не поддерживается текущей сборкой API.";
     }
 
     viewer.cameraControl.on("picked", e => {
