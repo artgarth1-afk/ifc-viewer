@@ -55,7 +55,7 @@
         let selectedEntity = null;
 
         ifcLoader.load({
-            src: "https://artgarth1-afk.github.io/ifc-viewer/model.ifc", // твой файл на Pages
+            src: "model.ifc", // файл лежит рядом с index.html в docs/
             id: "myModel"
         }).then(model => {
             modelEntity = model;
@@ -76,6 +76,8 @@
                     console.log("Выбран объект:", e.entity.id);
                 }
             });
+        }).catch(err => {
+            console.error("Ошибка загрузки IFC:", err);
         });
 
         // --- Панель инструментов ---
@@ -115,7 +117,6 @@
         document.getElementById("showInfo").onclick = () => {
             const infoDiv = document.getElementById("info");
             if (selectedEntity) {
-                // В xeokit IFC свойства хранятся в entity.meta или entity.id
                 const props = selectedEntity.meta || {};
                 let html = `<b>ID:</b> ${selectedEntity.id}<br>`;
                 if (props.GlobalId) html += `<b>GUID:</b> ${props.GlobalId}<br>`;
