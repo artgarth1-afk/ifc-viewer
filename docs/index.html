@@ -24,16 +24,17 @@
     viewer.camera.look = [0, 0, 0];
     viewer.camera.up = [0, 1, 0];
 
-    // Инициализация WebIFC версии 0.0.74
+    // Инициализация WebIFC (v0.0.74)
     const ifcAPI = new IfcAPI();
     await ifcAPI.Init();   // без аргументов
 
     // Загружаем IFC
     const res = await fetch("./model.ifc");
     if (!res.ok) throw new Error("Не удалось загрузить model.ifc: " + res.status);
-    const modelBuffer = await res.arrayBuffer();
+    const buffer = await res.arrayBuffer();
+    const data = new Uint8Array(buffer);   // <-- ключевой момент
 
-    const modelID = ifcAPI.OpenModel(modelBuffer);
+    const modelID = ifcAPI.OpenModel(data);
     console.log("IFC открыт:", modelID);
 
     // Получаем геометрию
