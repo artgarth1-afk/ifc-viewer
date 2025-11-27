@@ -2,32 +2,28 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IFC Model Viewer</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html, body { width: 100%; height: 100%; overflow: hidden; }
-        #viewer { width: 100%; height: 100%; }
-        #file-input { position: absolute; top: 10px; left: 10px; z-index: 100; }
-    </style>
+    <title>IFC Viewer</title>
+    <script src="https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk/dist/xeokit-sdk.min.js"></script>
 </head>
 <body>
-    <input type="file" id="file-input" accept=".ifc">
-    <div id="viewer"></div>
-    <script src="https://cdn.jsdelivr.net/npm/xeokit-sdk/dist/xeokit-sdk.es.js"></script>
+    <div id="viewer" style="width:100%; height:600px;"></div>
     <script>
-        const viewer = new Viewer({
-            container: "viewer"
-        });
+        const viewer = new xeokit.Viewer({ canvasId: "viewer" });
+        viewer.camera.eye = [20, 20, 20];
+        viewer.camera.look = [0, 0, 0];
+        viewer.camera.up = [0, 1, 0];
 
-        const ifcLoader = new WebIFCLoaderPlugin(viewer, {
-            wasmPath: "https://unpkg.com/web-ifc@latest/"
-        });
+        new xeokit.CameraControl(viewer);
 
-        document.getElementById("file-input").addEventListener("change", (e) => {
-            const file = e.target.files[0];
-            const url = URL.createObjectURL(file);
-            ifcLoader.load({ id: "model", src: url });
+        const ifcLoader = new xeokit.IFCLoader(viewer);
+
+        ifcLoader.load({
+            src: "https://artgarth1-afk.github.io/ifc-viewer/model.ifc", // <-- GitHub Pages URL
+            id: "myModel"
+        }).then(model => {
+            console.log("IFC модель загружена!");
+        }).catch(err => {
+            console.error("Ошибка загрузки IFC:", err);
         });
     </script>
 </body>
