@@ -1,9 +1,11 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>IFC Viewer (WebIFC + Xeokit)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
+    html, body { height:100%; }
     body { margin:0; font-family:sans-serif; }
     #viewer { width:100%; height:90vh; display:block; background:#111; }
     #info { height:10vh; overflow:auto; padding:6px; background:#fafafa; border-top:1px solid #ddd; font-size:13px; }
@@ -25,16 +27,16 @@
     viewer.camera.look = [0, 0, 0];
     viewer.camera.up = [0, 1, 0];
 
-    // Инициализация WebIFC с локальным wasm
+    // Инициализация WebIFC (без параметров — для сборки из npm)
     const ifcAPI = new IfcAPI();
-    await ifcAPI.Init({
-      locateFile: (file) => "./web-ifc.wasm"
-    });
+    await ifcAPI.Init();
 
     // Загружаем IFC
-    const modelBuffer = await fetch("./model.ifc").then(r => r.arrayBuffer());
-    const modelID = ifcAPI.OpenModel(modelBuffer);
+    const res = await fetch("./model.ifc");
+    if (!res.ok) throw new Error("Не удалось загрузить model.ifc: " + res.status);
+    const modelBuffer = await res.arrayBuffer();
 
+    const modelID = ifcAPI.OpenModel(modelBuffer);
     console.log("IFC открыт:", modelID);
 
     // Получаем геометрию
