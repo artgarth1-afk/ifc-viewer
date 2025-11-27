@@ -211,11 +211,13 @@
         </div>
     </div>
 
-    <script src="https://raw.githubusercontent.com/artgarth1-afk/ifc-viewer/main/libs/three.min.js"></script>
-    <script src="https://raw.githubusercontent.com/artgarth1-afk/ifc-viewer/main/libs/OrbitControls.js"></script>
-    <script src="https://raw.githubusercontent.com/artgarth1-afk/ifc-viewer/main/libs/web-ifc-three.umd.js"></script>
+    <script src="./libs/three.min.js"></script>
+    <script src="./libs/OrbitControls.js"></script>
+    <script src="./libs/web-ifc-api.js"></script>
+    <script src="./libs/web-ifc-three.umd.js"></script>
 
     <script>
+        // Ждём загрузки всех библиотек
         function initViewer() {
             if (typeof THREE === 'undefined' || typeof IFCLoader === 'undefined') {
                 setTimeout(initViewer, 100);
