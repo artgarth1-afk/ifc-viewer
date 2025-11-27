@@ -3,35 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <title>IFC Viewer</title>
-    <!-- Подключаем UMD-бандл -->
+    <!-- Подключаем UMD-бандл xeokit -->
     <script src="https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk/dist/xeokit-sdk.umd.min.js"></script>
     <style>
-        body { margin:0; }
-        #viewer { width:100%; height:100vh; }
+        body { margin:0; font-family: sans-serif; }
+        #viewer { width:100%; height:80vh; }
+        #toolbar {
+            height: 10vh;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px;
+            background: #eee;
+        }
+        #info {
+            height: 10vh;
+            overflow:auto;
+            padding: 5px;
+            background: #f9f9f9;
+            border-top: 1px solid #ccc;
+        }
+        button { padding: 6px 12px; }
     </style>
 </head>
 <body>
     <div id="viewer"></div>
-    <script>
-        // Теперь xeokit доступен глобально
-        const viewer = new xeokit.Viewer({ canvasId: "viewer" });
+    <div id="toolbar">
+        <button id="resetCamera">Сброс камеры</button>
+        <button id="toggleModel">Скрыть/Показать модель</button>
+        <button id="isolate">Изоляция объекта</button>
+        <button id="showAll">Показать всё</button>
+        <button id="screenshot">Скриншот PNG</button>
+        <button id="showInfo">Информация об объекте</button>
+    </div>
+    <div id="info">Выберите объект, затем нажмите «Информация об объекте»</div>
 
+    <script>
+        // Viewer
+        const viewer = new xeokit.Viewer({ canvasId: "viewer" });
         viewer.camera.eye = [20, 20, 20];
         viewer.camera.look = [0, 0, 0];
         viewer.camera.up = [0, 1, 0];
 
+        // Управление камерой
         new xeokit.CameraControl(viewer);
 
+        // IFC загрузчик
         const ifcLoader = new xeokit.IFCLoader(viewer);
+
+        let modelEntity = null;
+        let selectedEntity = null;
 
         ifcLoader.load({
             src: "https://artgarth1-afk.github.io/ifc-viewer/model.ifc", // твой файл на Pages
             id: "myModel"
-        }).then(() => {
+        }).then(model => {
+            modelEntity = model;
             console.log("IFC модель загружена!");
-        }).catch(err => {
-            console.error("Ошибка загрузки IFC:", err);
+
+            // Подсветка объектов при клике
+            const highlight = new xeokit.HighlightMaterial(viewer, {
+                color: [0, 1, 0],
+                alpha: 0.5
+            });
+
+            viewer.cameraControl.on("picked", e => {
+                if (e.entity) {
+                    viewer.scene.setObjectsHighlighted(viewer.scene.objects, false);
+                    e.entity.highlighted = true;
+                    e.entity.highlightMaterial = highlight;
+                    selectedEntity = e.entity;
+                    console.log("Выбран объект:", e.entity.id);
+                }
+            });
         });
+
+        // --- Панель инструментов ---
+        document.getElementById("resetCamera").onclick = () => {
+            viewer.camera.eye = [20, 20, 20];
+            viewer.camera.look = [0, 0, 0];
+            viewer.camera.up = [0, 1, 0];
+        };
+
+        document.getElementById("toggleModel").onclick = () => {
+            if (modelEntity) {
+                modelEntity.visible = !modelEntity.visible;
+            }
+        };
+
+        document.getElementById("isolate").onclick = () => {
+            if (selectedEntity) {
+                viewer.scene.setObjectsVisible(viewer.scene.objects, false);
+                selectedEntity.visible = true;
+            } else {
+                alert("Сначала выбери объект кликом по модели!");
+            }
+        };
+
+        document.getElementById("showAll").onclick = () => {
+            viewer.scene.setObjectsVisible(viewer.scene.objects, true);
+        };
+
+        document.getElementById("screenshot").onclick = () => {
+            const dataURL = viewer.getSnapshot({ format: "png" });
+            const link = document.createElement("a");
+            link.href = dataURL;
+            link.download = "screenshot.png";
+            link.click();
+        };
+
+        document.getElementById("showInfo").onclick = () => {
+            const infoDiv = document.getElementById("info");
+            if (selectedEntity) {
+                // В xeokit IFC свойства хранятся в entity.meta или entity.id
+                const props = selectedEntity.meta || {};
+                let html = `<b>ID:</b> ${selectedEntity.id}<br>`;
+                if (props.GlobalId) html += `<b>GUID:</b> ${props.GlobalId}<br>`;
+                if (props.Name) html += `<b>Имя:</b> ${props.Name}<br>`;
+                if (props.Type) html += `<b>Тип:</b> ${props.Type}<br>`;
+                infoDiv.innerHTML = html;
+            } else {
+                infoDiv.innerHTML = "Сначала выбери объект кликом по модели!";
+            }
+        };
     </script>
 </body>
 </html>
