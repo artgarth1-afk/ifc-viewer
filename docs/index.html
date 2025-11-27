@@ -77,7 +77,7 @@
       }
 
       // Теперь безопасно проверяем длину
-      if (positions.length === 0 || indices.length === 0) {
+      if ((positions?.length ?? 0) === 0 || (indices?.length ?? 0) === 0) {
         continue;
       }
 
