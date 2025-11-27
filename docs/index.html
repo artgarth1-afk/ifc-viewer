@@ -2,9 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>IFC Viewer</title>
-  <!-- Попробуй через unpkg -->
-  <script src="https://unpkg.com/@xeokit/xeokit-sdk/dist/xeokit-sdk.umd.min.js"></script>
+  <title>IFC Viewer (ESM)</title>
   <style>
     body { margin:0; }
     #viewer { width:100%; height:100vh; }
@@ -12,17 +10,17 @@
 </head>
 <body>
   <div id="viewer"></div>
-  <script>
-    console.log("xeokit:", xeokit);
+  <script type="module">
+    import { Viewer, CameraControl, IFCLoader } from 'https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk@2.6.95/dist/xeokit-sdk.es.js';
 
-    const viewer = new xeokit.Viewer({ canvasId: "viewer" });
+    const viewer = new Viewer({ canvasId: "viewer" });
     viewer.camera.eye = [20, 20, 20];
     viewer.camera.look = [0, 0, 0];
     viewer.camera.up = [0, 1, 0];
 
-    new xeokit.CameraControl(viewer);
+    new CameraControl(viewer);
 
-    const ifcLoader = new xeokit.IFCLoader(viewer);
+    const ifcLoader = new IFCLoader(viewer);
 
     ifcLoader.load({
       src: "model.ifc",
