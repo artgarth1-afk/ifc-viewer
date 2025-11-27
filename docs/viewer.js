@@ -2,9 +2,9 @@
 // 1. Импортируем Viewer и WebIFCLoaderPlugin из Xeokit
 import { Viewer, WebIFCLoaderPlugin } from "./xeokit-sdk.es.js";
 
-// 2. ИСПРАВЛЕНИЕ: Используем ИМПОРТ ПО УМОЛЧАНИЮ. 
-// Теперь переменная WebIFC содержит класс (конструктор).
-import WebIFC from "./web-ifc-api.js"; 
+// 2. ИСПРАВЛЕНИЕ: Импортируем модуль полностью как объект (WebIFCModule).
+// Это обходит проблему отсутствия именованного/дефолтного экспорта.
+import * as WebIFCModule from "./web-ifc-api.js"; 
 
 
 // 1. Инициализация Viewer (сцена)
@@ -20,12 +20,13 @@ viewer.camera.up = [-0.01, 0.99, 0.039];
 
 
 // 2. Настройка загрузчика IFC
-// ОШИБКА ИСПРАВЛЕНА: передаем корректно импортированный класс WebIFC
+// ОКОНЧАТЕЛЬНОЕ ИСПРАВЛЕНИЕ: Передаем весь импортированный объект WebIFCModule.
+// В CommonJS-сборках это, по сути, объект, содержащий класс WebIFC.
 const ifcLoader = new WebIFCLoaderPlugin(viewer, {
     wasmPath: "./",       // Путь к файлу .wasm
     
-    // Передаем класс WebIFC, полученный через импорт по умолчанию
-    webIFC: WebIFC 
+    // Передаем импортированный объект модуля
+    webIFC: WebIFCModule 
 });
 
 
