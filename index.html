@@ -1,61 +1,13 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>IFC Viewer</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>html,body{margin:0;height:100%}#viewer{width:100vw;height:100vh}</style>
+  <meta charset="UTF-8" />
+  <title>IFC.js Viewer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <div id="viewer"></div>
-
-  <script type="module">
-    (async () => {
-      // ESM сборка с jsDelivr
-      const mod = await import('https://cdn.jsdelivr.net/npm/web-ifc-viewer@1.0.174/dist/web-ifc-viewer.esm.js');
-      const IfcViewerAPI = mod.IfcViewerAPI;
-
-      const container = document.getElementById('viewer');
-      const viewer = new IfcViewerAPI({ container, backgroundColor: 0xffffff });
-
-      viewer.axes.setAxes();
-      viewer.grid.setGrid();
-
-      // Если вы загрузили web-ifc.wasm в репозиторий, замените <USERNAME> и <REPO> ниже
-      // на свои значения и раскомментируйте setWasmUrl строку.
-      // Пример raw URL:
-      // https://raw.githubusercontent.com/<USERNAME>/<REPO>/main/assets/web-ifc.wasm
-
-      // Попытка использовать локальный файл в репозитории (assets/web-ifc.wasm)
-      try {
-        const resp = await fetch('./assets/web-ifc.wasm', { method: 'HEAD' });
-        if (resp.ok) {
-          viewer.IFC.loader.ifcManager.setWasmPath('./assets/');
-        } else {
-          // fallback на CDN
-          viewer.IFC.loader.ifcManager.setWasmUrl('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/web-ifc.wasm');
-        }
-      } catch (e) {
-        viewer.IFC.loader.ifcManager.setWasmUrl('https://cdn.jsdelivr.net/npm/web-ifc@0.0.47/web-ifc.wasm');
-      }
-
-      try {
-        await viewer.IFC.loadIfcUrl('./model.ifc');
-        console.log('IFC загружен');
-      } catch (err) {
-        console.error('Ошибка загрузки IFC:', err);
-        const msg = document.createElement('div');
-        msg.style.position = 'fixed';
-        msg.style.left = '8px';
-        msg.style.top = '8px';
-        msg.style.background = '#fff';
-        msg.style.padding = '8px';
-        msg.style.color = '#900';
-        msg.style.zIndex = 9999;
-        msg.textContent = 'Ошибка загрузки IFC. Проверьте model.ifc и assets/web-ifc.wasm.';
-        document.body.appendChild(msg);
-      }
-    })();
-  </script>
+  <canvas id="three-canvas"></canvas>
+  <script type="module" src="bundle.js"></script>
 </body>
 </html>
