@@ -31,7 +31,7 @@ function waitForLibraries() {
 
   const canvas = document.getElementById("three-canvas");
   const renderer = new THREE.WebGLRenderer({
-    canvas,
+    canvas: canvas,
     alpha: true,
     antialias: true
   });
@@ -57,7 +57,7 @@ function waitForLibraries() {
 
   ifcLoader.load(
     IFC_URL,
-    (ifcModel) => {
+    function(ifcModel) {
       const obj = ifcModel.mesh || ifcModel;
       scene.add(obj);
 
@@ -72,7 +72,7 @@ function waitForLibraries() {
       controls.update();
     },
     undefined,
-    (err) => {
+    function(err) {
       console.error("Ошибка загрузки IFC:", err);
     }
   );
@@ -84,7 +84,7 @@ function waitForLibraries() {
   }
   animate();
 
-  window.addEventListener("resize", () => {
+  window.addEventListener("resize", function() {
     size.width = window.innerWidth;
     size.height = window.innerHeight;
     camera.aspect = size.width / size.height;
@@ -93,5 +93,4 @@ function waitForLibraries() {
   });
 }
 
-// Запусти проверку
 waitForLibraries();
