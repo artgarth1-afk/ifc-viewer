@@ -7,11 +7,13 @@
     body { margin:0; font-family:sans-serif; }
     #viewer { width:100%; height:90vh; display:block; background:#111; }
     #info { height:10vh; overflow:auto; padding:6px; background:#fafafa; border-top:1px solid #ddd; font-size:13px; }
+    #log  { position:fixed; right:8px; bottom:8px; background:#000; color:#0f0; font:12px/1.4 monospace; max-width:50vw; max-height:30vh; overflow:auto; padding:8px; opacity:.85; }
   </style>
 </head>
 <body>
   <canvas id="viewer"></canvas>
   <div id="info">Готово к загрузке IFC</div>
+  <div id="log"></div>
 
   <script type="module">
     import { Viewer } from './xeokit-sdk.es.js';
@@ -24,16 +26,25 @@
     viewer.camera.look = [0, 0, 0];
     viewer.camera.up = [0, 1, 0];
 
-    const ifcAPI = new IfcAPI();
-    await ifcAPI.Init();   // v0.0.74 — без аргументов
+    const log = (msg) => {
+      const el = document.getElementById('log');
+      el.textContent += (typeof msg === 'string' ? msg : JSON.stringify(msg)) + '\n';
+    };
 
-    // Загружаем IFC
+    const ifcAPI = new IfcAPI();
+    await ifcAPI.Init();   // 0.0.74 — без аргументов
+
+    // Загрузка IFC
     const res = await fetch("./model.ifc");
+    if (!res.ok) {
+      document.getElementById("info").innerText = "Не удалось загрузить model.ifc";
+      throw new Error("HTTP " + res.status);
+    }
     const buffer = await res.arrayBuffer();
     const data = new Uint8Array(buffer);
 
     const modelID = ifcAPI.OpenModel(data);
-    console.log("IFC открыт:", modelID);
+    log("IFC открыт: " + modelID);
 
     const palette = [
       [0.75, 0.75, 0.80],
@@ -45,65 +56,80 @@
 
     const entities = [];
 
-    // Получаем максимальный expressID
-    const maxID = ifcAPI.GetMaxExpressID(modelID);
-    console.log("Max expressID:", maxID);
+    // Максимальный expressID
+    let maxID = 0;
+    try {
+      maxID = ifcAPI.GetMaxExpressID(modelID) || 0;
+    } catch (e) {
+      log("GetMaxExpressID error: " + e?.message);
+      maxID = 0;
+    }
+    log("Max expressID: " + maxID);
 
-    // Перебираем все элементы
+    // Хелперы безопасной проверки
+    const isTypedArray = (x) => ArrayBuffer.isView(x) && typeof x.byteLength === 'number' && x.byteLength > 0;
+    const safeColor = (idx) => palette[idx % palette.length];
+
+    // Перебор элементов
     for (let expressID = 1; expressID <= maxID; expressID++) {
       let geomData;
       try {
         geomData = ifcAPI.GetGeometry(modelID, expressID);
-      } catch {
-        continue; // элемент без геометрии
-      }
-
-      if (!geomData || typeof geomData.geometryExpressID !== "number") {
-        continue; // пропускаем негеометрические элементы
-      }
-
-      const geomID = geomData.geometryExpressID;
-
-      // Получаем массивы вершин и индексов
-      const positions = ifcAPI.GetVertexArray(modelID, geomID);
-      const indices = ifcAPI.GetIndexArray(modelID, geomID);
-
-      // Жёсткая проверка: не трогаем .length, пока не убедились что массивы существуют
-      if (!positions || !indices) {
-        continue;
-      }
-      if (!ArrayBuffer.isView(positions) || !ArrayBuffer.isView(indices)) {
+      } catch (e) {
+        // Элемент без геометрии или неподдерживаемый — пропуск
         continue;
       }
 
-      // Теперь безопасно проверяем длину
-      if ((positions?.length ?? 0) === 0 || (indices?.length ?? 0) === 0) {
+      // Проверка наличия geometryExpressID
+      const geomID = (geomData && typeof geomData.geometryExpressID === "number")
+        ? geomData.geometryExpressID
+        : null;
+
+      if (geomID === null) {
+        // Негеометрический элемент — пропуск
         continue;
       }
 
-      const color = palette[expressID % palette.length];
+      // Получение массивов вершин и индексов
+      let positions, indices;
+      try {
+        positions = ifcAPI.GetVertexArray(modelID, geomID);
+      } catch (e) {
+        positions = null;
+      }
+      try {
+        indices = ifcAPI.GetIndexArray(modelID, geomID);
+      } catch (e) {
+        indices = null;
+      }
+
+      // Строгая фильтрация: не используем .length вообще; проверяем тип и byteLength
+      if (!isTypedArray(positions) || !isTypedArray(indices)) {
+        // Лог минимальный, чтобы не шуметь
+        continue;
+      }
+
+      // Добавление меша
       const meshId = "geom_" + geomID;
-
       viewer.scene.addMesh({
         id: meshId,
         positions,
         indices,
-        color,
+        color: safeColor(expressID),
         isObject: true
       });
 
-      // Метаданные элемента
-      let props;
+      // Метаданные
+      let props = null;
       try {
-        props = ifcAPI.GetLine(modelID, expressID);
-      } catch {
-        props = null;
-      }
+        props = ifcAPI.GetLine(modelID, expressID) || null;
+      } catch {}
       if (props) {
         entities.push({ id: meshId, props });
       }
     }
 
+    // Автокамера и инфо
     if (viewer.scene.meshes.length > 0) {
       viewer.cameraFlight.flyTo(viewer.scene.getAABB());
       document.getElementById("info").innerText = "Модель загружена. Кликни по элементу, чтобы увидеть свойства.";
@@ -111,7 +137,7 @@
       document.getElementById("info").innerText = "Геометрия не найдена или не поддерживается текущей сборкой API.";
     }
 
-    // Подсветка и вывод информации при клике
+    // Пик и свойства
     viewer.cameraControl.on("picked", e => {
       const infoDiv = document.getElementById("info");
       viewer.scene.setObjectsHighlighted(viewer.scene.objects, false);
@@ -121,10 +147,10 @@
         const meta = entities.find(x => x.id === e.entity.id)?.props || null;
 
         let html = `<b>ID:</b> ${e.entity.id}`;
-        if (meta) {
-          const name = meta.Name || meta.ObjectType || "";
-          const type = meta.type || meta.Type || "";
-          const guid = meta.GlobalId || meta.GlobalID || "";
+        if (meta && typeof meta === 'object') {
+          const name = meta?.Name || meta?.ObjectType || "";
+          const type = meta?.type || meta?.Type || "";
+          const guid = meta?.GlobalId || meta?.GlobalID || "";
           if (name) html += ` | <b>Имя:</b> ${name}`;
           if (type) html += ` | <b>Тип:</b> ${type}`;
           if (guid) html += ` | <b>GUID:</b> ${guid}`;
