@@ -48,13 +48,13 @@ const controls = new THREE.OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.target.set(-2, 0, 0);
 
-// 8. IFCLoader (из three/examples/js/loaders/IFCLoader.js)
-const ifcLoader = new THREE.IFCLoader();
+// 8. IFCLoader из web-ifc-three UMD
+const ifcLoader = new IFCLoader.IFCLoader(); // ВАЖНО: через IFCLoader.IFCLoader()
 
-// путь к wasm (лежит рядом с viewer.js, если положишь web-ifc.wasm туда же)
+// путь к wasm (положи web-ifc.wasm рядом с viewer.js; иначе поправь путь)
 ifcLoader.ifcManager.setWasmPath("./");
 
-// URL IFC (замени на своё имя файла/репо, если другое)
+// URL IFC (подставь свой репо/имя файла)
 const IFC_URL = "https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/model.ifc";
 
 // загрузка IFC
