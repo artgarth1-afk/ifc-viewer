@@ -49,47 +49,21 @@ function waitForLibraries() {
   controls.enableDamping = true;
   controls.target.set(-2, 0, 0);
 
-  // Загружаем IFC как простую 3D-сетку через GLTFLoader
-  const loader = new THREE.GLTFLoader();
-  
-  // Попробуем загрузить model.ifc как есть (это не будет работать идеально,
-  // но хотя бы проверим структуру)
-  fetch("./model.ifc")
-    .then(response => response.arrayBuffer())
-    .then(data => {
-      console.log("IFC файл загружен, размер:", data.byteLength);
-      
-      // Создаём тестовый куб на месте модели
-      const geometry = new THREE.BoxGeometry(10, 10, 10);
-      const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
-      const mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
-      
-      const box = new THREE.Box3().setFromObject(mesh);
-      const sizeBox = box.getSize(new THREE.Vector3());
-      const center = box.getCenter(new THREE.Vector3());
-      const maxSize = Math.max(sizeBox.x, sizeBox.y, sizeBox.z) || 1;
-      const distance = maxSize * 2;
+  // Тестовый куб
+  const geometry = new THREE.BoxGeometry(10, 10, 10);
+  const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
+  const mesh = new THREE.Mesh(geometry, material);
+  scene.add(mesh);
 
-      camera.position.set(center.x + distance, center.y + distance, center.z + distance);
-      controls.target.copy(center);
-      controls.update();
-    })
-    .catch(err => {
-      console.error("Ошибка загрузки IFC:", err);
-      
-      // Если IFC не загрузился, просто создаём тестовый куб
-      const geometry = new THREE.BoxGeometry(10, 10, 10);
-      const material = new THREE.MeshStandardMaterial({ color: 0xff6600 });
-      const mesh = new THREE.Mesh(geometry, material);
-      scene.add(mesh);
-      
-      const box = new THREE.Box3().setFromObject(mesh);
-      const center = box.getCenter(new THREE.Vector3());
-      camera.position.set(center.x + 20, center.y + 20, center.z + 20);
-      controls.target.copy(center);
-      controls.update();
-    });
+  const box = new THREE.Box3().setFromObject(mesh);
+  const sizeBox = box.getSize(new THREE.Vector3());
+  const center = box.getCenter(new THREE.Vector3());
+  const maxSize = Math.max(sizeBox.x, sizeBox.y, sizeBox.z) || 1;
+  const distance = maxSize * 2;
+
+  camera.position.set(center.x + distance, center.y + distance, center.z + distance);
+  controls.target.copy(center);
+  controls.update();
 
   function animate() {
     requestAnimationFrame(animate);
