@@ -1,41 +1,28 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>IFC Viewer</title>
-    <script src="https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk/dist/xeokit-sdk.min.js"></script>
-    <style>
-        body { margin:0; }
-        #viewer { width:100%; height:100vh; }
-    </style>
+  <meta charset="UTF-8">
+  <title>IFC Viewer</title>
 </head>
 <body>
-    <div id="viewer"></div>
-    <script>
-        // Создаём Viewer
-        const viewer = new xeokit.Viewer({ canvasId: "viewer" });
+  <div id="viewer" style="width:100%; height:100vh;"></div>
 
-        // Камера по умолчанию
-        viewer.camera.eye = [20, 20, 20];
-        viewer.camera.look = [0, 0, 0];
-        viewer.camera.up = [0, 1, 0];
+  <script type="module">
+    import { Viewer, CameraControl, IFCLoader } 
+      from "https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk/dist/xeokit-sdk.es.min.js";
 
-        // Управление камерой (OrbitControls)
-        new xeokit.CameraControl(viewer);
+    const viewer = new Viewer({ canvasId: "viewer" });
+    viewer.camera.eye = [20, 20, 20];
+    viewer.camera.look = [0, 0, 0];
+    viewer.camera.up = [0, 1, 0];
 
-        // IFC загрузчик
-        const ifcLoader = new xeokit.IFCLoader(viewer);
+    new CameraControl(viewer);
 
-        // Загружаем конкретный файл из GitHub Pages
-        ifcLoader.load({
-            src: "https://artgarth1-afk.github.io/ifc-viewer/model.ifc", // <-- твой файл
-            id: "myModel"
-        }).then(model => {
-            console.log("IFC модель загружена!");
-        }).catch(err => {
-            console.error("Ошибка загрузки IFC:", err);
-        });
-    </script>
+    const ifcLoader = new IFCLoader(viewer);
+    ifcLoader.load({
+      src: "https://artgarth1-afk.github.io/ifc-viewer/model.ifc",
+      id: "myModel"
+    }).then(() => console.log("IFC загружен!"));
+  </script>
 </body>
 </html>
-
