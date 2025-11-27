@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8">
-  <title>IFC Viewer (ESM)</title>
+  <title>IFC Viewer</title>
   <style>
     body { margin:0; }
     #viewer { width:100%; height:100vh; }
@@ -11,7 +11,7 @@
 <body>
   <div id="viewer"></div>
   <script type="module">
-    import { Viewer, CameraControl, IFCLoader } from 'https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk@2.6.95/dist/xeokit-sdk.es.js';
+    import { Viewer, CameraControl, IFCLoader } from './xeokit-sdk.es.js';
 
     const viewer = new Viewer({ canvasId: "viewer" });
     viewer.camera.eye = [20, 20, 20];
@@ -24,6 +24,9 @@
 
     ifcLoader.load({
       src: "model.ifc",
+      webIfc: {
+        wasmPath: "./web-ifc.wasm"
+      },
       id: "myModel"
     }).then(() => {
       console.log("IFC модель загружена!");
