@@ -27,7 +27,9 @@
 
     // Инициализация WebIFC с локальным wasm
     const ifcAPI = new IfcAPI();
-    await ifcAPI.Init("./web-ifc.wasm");
+    await ifcAPI.Init({
+      locateFile: (file) => "./web-ifc.wasm"
+    });
 
     // Загружаем IFC
     const modelBuffer = await fetch("./model.ifc").then(r => r.arrayBuffer());
@@ -38,7 +40,6 @@
     // Получаем геометрию
     const geometries = ifcAPI.GetGeometry(modelID);
 
-    // Палитра цветов
     const palette = [
       [0.75, 0.75, 0.80],
       [0.75, 0.80, 0.75],
