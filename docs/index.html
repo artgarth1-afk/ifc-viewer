@@ -3,9 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <title>IFC Viewer (WebIFC + Xeokit)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    html, body { height:100%; }
     body { margin:0; font-family:sans-serif; }
     #viewer { width:100%; height:90vh; display:block; background:#111; }
     #info { height:10vh; overflow:auto; padding:6px; background:#fafafa; border-top:1px solid #ddd; font-size:13px; }
@@ -19,7 +17,6 @@
     import { Viewer } from './xeokit-sdk.es.js';
     import { IfcAPI } from './web-ifc-api.js';
 
-    // Создаём Viewer
     const canvas = document.getElementById("viewer");
     const viewer = new Viewer({ canvasElement: canvas });
 
@@ -27,20 +24,17 @@
     viewer.camera.look = [0, 0, 0];
     viewer.camera.up = [0, 1, 0];
 
-    // Инициализация WebIFC (v0.0.74) — без аргументов
     const ifcAPI = new IfcAPI();
-    await ifcAPI.Init();
+    await ifcAPI.Init();   // v0.0.74 — без аргументов
 
-    // Загружаем IFC и открываем модель (Uint8Array!)
+    // Загружаем IFC
     const res = await fetch("./model.ifc");
-    if (!res.ok) throw new Error("Не удалось загрузить model.ifc: " + res.status);
     const buffer = await res.arrayBuffer();
     const data = new Uint8Array(buffer);
 
     const modelID = ifcAPI.OpenModel(data);
     console.log("IFC открыт:", modelID);
 
-    // Палитра цветов
     const palette = [
       [0.75, 0.75, 0.80],
       [0.75, 0.80, 0.75],
@@ -51,36 +45,20 @@
 
     const entities = [];
 
-    // Получаем все элементы типа IfcProduct (0), включая подтипы
-    let allIDs = [];
-    try {
-      allIDs = ifcAPI.GetAllItemsOfType(modelID, 0, true) || [];
-    } catch (e) {
-      console.error("GetAllItemsOfType ошибка:", e);
-      document.getElementById("info").innerText = "Не удалось получить список элементов IfcProduct.";
-    }
+    // Новый API: получаем список всех геометрий
+    const geomIDs = ifcAPI.GetGeometryIDs(modelID);
+    console.log("Geometry IDs:", geomIDs);
 
-    // Построение геометрии по каждому элементу
-    for (const expressID of allIDs) {
-      let geomData = null;
-      try {
-        geomData = ifcAPI.GetGeometry(modelID, expressID);
-      } catch (e) {
-        // Если элемент без геометрии или API вернул ClassHandle без нужных полей — пропускаем
-        continue;
-      }
-      if (!geomData || typeof geomData.geometryExpressID !== "number") continue;
+    for (const geomID of geomIDs) {
+      const geomData = ifcAPI.GetGeometry(modelID, geomID);
+      if (!geomData) continue;
 
-      const geomID = geomData.geometryExpressID;
-
-      // Получаем массивы вершин/индексов
       const positions = ifcAPI.GetVertexArray(modelID, geomID);
       const indices = ifcAPI.GetIndexArray(modelID, geomID);
 
-      if (!positions || !indices) continue;
-      if (!positions.length || !indices.length) continue;
+      if (!positions || !indices || !positions.length || !indices.length) continue;
 
-      const color = palette[expressID % palette.length];
+      const color = palette[geomID % palette.length];
       const meshId = "geom_" + geomID;
 
       viewer.scene.addMesh({
@@ -91,14 +69,12 @@
         isObject: true
       });
 
-      // Метаданные элемента
       try {
-        const props = ifcAPI.GetLine(modelID, expressID);
+        const props = ifcAPI.GetLine(modelID, geomID);
         entities.push({ id: meshId, props });
       } catch (_) {}
     }
 
-    // Автоподгон камеры
     if (viewer.scene.meshes.length > 0) {
       viewer.cameraFlight.flyTo(viewer.scene.getAABB());
       document.getElementById("info").innerText = "Модель загружена. Кликни по элементу, чтобы увидеть свойства.";
@@ -106,7 +82,6 @@
       document.getElementById("info").innerText = "Геометрия не найдена или не поддерживается текущей сборкой API.";
     }
 
-    // Пик и инфо
     viewer.cameraControl.on("picked", e => {
       const infoDiv = document.getElementById("info");
       viewer.scene.setObjectsHighlighted(viewer.scene.objects, false);
