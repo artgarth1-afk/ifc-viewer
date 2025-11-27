@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <title>IFC Viewer (WebIFC + Xeokit)</title>
   <style>
-    body { margin:0; font-family: sans-serif; }
+    body { margin:0; font-family:sans-serif; }
     #viewer { width:100%; height:90vh; display:block; }
     #info { height:10vh; overflow:auto; padding:5px; background:#f9f9f9; border-top:1px solid #ccc; }
   </style>
@@ -17,12 +17,15 @@
     import { Viewer } from './xeokit-sdk.es.js';
     import { IfcAPI } from "https://cdn.jsdelivr.net/npm/web-ifc@0.0.44/web-ifc-api.js";
 
+    // Получаем холст напрямую
+    const canvas = document.getElementById("viewer");
+
     // Создаём Viewer
-    const viewer = new Viewer({ canvasId: "viewer" });
+    const viewer = new Viewer({ canvasElement: canvas });
+
     viewer.camera.eye = [20, 20, 20];
     viewer.camera.look = [0, 0, 0];
     viewer.camera.up = [0, 1, 0];
-    viewer.cameraControl.setNavigationMode("orbit");
 
     // Инициализация WebIFC
     const ifcAPI = new IfcAPI();
@@ -34,33 +37,28 @@
 
     console.log("IFC открыт:", modelID);
 
-    // Получаем геометрию IFC
-    const geometries = ifcAPI.GetGeometry(modelID);
+    // Получаем список элементов IFC
+    const allItems = ifcAPI.GetAllItemsOfType(modelID, ifcAPI.typesIfc.IFCBUILDINGELEMENT, true);
 
-    // Добавляем каждую геометрию в Viewer
-    for (const geom of geometries) {
-      const verts = ifcAPI.GetVertexArray(modelID, geom.geometryExpressID);
-      const indices = ifcAPI.GetIndexArray(modelID, geom.geometryExpressID);
-
-      // Создаём меш в xeokit
-      viewer.scene.addMesh({
-        id: "geom_" + geom.geometryExpressID,
-        positions: verts,
-        indices: indices,
-        color: [0.6, 0.6, 0.8], // серо‑голубой
-        isObject: true
+    // Добавляем временные кубы-заглушки для каждого элемента
+    for (const item of allItems) {
+      const props = ifcAPI.GetLine(modelID, item);
+      viewer.scene.addEntity({
+        id: "ifc_" + item,
+        isObject: true,
+        aabb: [-0.5,-0.5,-0.5, 0.5,0.5,0.5], // куб-заглушка
+        meta: props
       });
     }
 
     // Подсветка при клике
-    let selectedEntity = null;
     viewer.cameraControl.on("picked", e => {
       if (e.entity) {
         viewer.scene.setObjectsHighlighted(viewer.scene.objects, false);
         e.entity.highlighted = true;
-        selectedEntity = e.entity;
         document.getElementById("info").innerHTML =
-          `<b>ID:</b> ${e.entity.id}`;
+          `<b>ID:</b> ${e.entity.id}<br>` +
+          `<b>Props:</b> ${JSON.stringify(e.entity.meta)}`;
       }
     });
   </script>
