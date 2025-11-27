@@ -1,10 +1,10 @@
 function waitForLibraries() {
-  if (!window.THREE) {
+  if (!window.THREE || !window.WebIFC) {
     setTimeout(waitForLibraries, 100);
     return;
   }
 
-  console.log("THREE загружен");
+  console.log("Все библиотеки загружены");
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0xcccccc);
@@ -49,21 +49,33 @@ function waitForLibraries() {
   controls.enableDamping = true;
   controls.target.set(-2, 0, 0);
 
-  // Тестовый куб
-  const geometry = new THREE.BoxGeometry(10, 10, 10);
-  const material = new THREE.MeshStandardMaterial({ color: 0x0077ff });
-  const mesh = new THREE.Mesh(geometry, material);
-  scene.add(mesh);
+  // IFC Loader
+  const IFCLoader = window.WebIFC.IFCLoader;
+  const ifcLoader = new IFCLoader();
+  ifcLoader.ifcManager.setWasmPath("./");
 
-  const box = new THREE.Box3().setFromObject(mesh);
-  const sizeBox = box.getSize(new THREE.Vector3());
-  const center = box.getCenter(new THREE.Vector3());
-  const maxSize = Math.max(sizeBox.x, sizeBox.y, sizeBox.z) || 1;
-  const distance = maxSize * 2;
+  fetch("./model.ifc")
+    .then(response => response.arrayBuffer())
+    .then(buffer => {
+      ifcLoader.load(buffer, (ifcModel) => {
+        scene.add(ifcModel);
 
-  camera.position.set(center.x + distance, center.y + distance, center.z + distance);
-  controls.target.copy(center);
-  controls.update();
+        const box = new THREE.Box3().setFromObject(ifcModel);
+        const sizeBox = box.getSize(new THREE.Vector3());
+        const center = box.getCenter(new THREE.Vector3());
+        const maxSize = Math.max(sizeBox.x, sizeBox.y, sizeBox.z) || 1;
+        const distance = maxSize * 2;
+
+        camera.position.set(center.x + distance, center.y + distance, center.z + distance);
+        controls.target.copy(center);
+        controls.update();
+
+        console.log("IFC модель загружена!");
+      });
+    })
+    .catch(err => {
+      console.error("Ошибка загрузки IFC:", err);
+    });
 
   function animate() {
     requestAnimationFrame(animate);
