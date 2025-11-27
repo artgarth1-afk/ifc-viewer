@@ -64,7 +64,8 @@
       const positions = ifcAPI.GetVertexArray(modelID, geomID);
       const indices = ifcAPI.GetIndexArray(modelID, geomID);
 
-      if (!positions || !indices || !positions.length || !indices.length) continue;
+      if (!positions || !indices) continue;
+      if (positions.length === undefined || indices.length === undefined) continue;
 
       const color = palette[expressID % palette.length];
       const meshId = "geom_" + geomID;
