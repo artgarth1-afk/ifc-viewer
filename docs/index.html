@@ -1,44 +1,133 @@
-<script type="module">
-  import { Viewer, IFCLoader } from './xeokit-sdk.es.js';
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>IFC Viewer</title>
+  <style>
+    body { margin:0; font-family: sans-serif; }
+    #viewer { width:100%; height:80vh; }
+    #toolbar {
+      height: 10vh;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 5px;
+      background: #eee;
+    }
+    #info {
+      height: 10vh;
+      overflow:auto;
+      padding: 5px;
+      background: #f9f9f9;
+      border-top: 1px solid #ccc;
+    }
+    button { padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <div id="viewer"></div>
+  <div id="toolbar">
+    <button id="resetCamera">Сброс камеры</button>
+    <button id="toggleModel">Скрыть/Показать модель</button>
+    <button id="isolate">Изоляция объекта</button>
+    <button id="showAll">Показать всё</button>
+    <button id="screenshot">Скриншот PNG</button>
+    <button id="showInfo">Информация об объекте</button>
+  </div>
+  <div id="info">Выберите объект, затем нажмите «Информация об объекте»</div>
 
-  const viewer = new Viewer({ canvasId: "viewer" });
+  <script type="module">
+    import { Viewer, IFCLoader } from './xeokit-sdk.es.js';
 
-  viewer.camera.eye = [20, 20, 20];
-  viewer.camera.look = [0, 0, 0];
-  viewer.camera.up = [0, 1, 0];
+    const viewer = new Viewer({ canvasId: "viewer" });
 
-  viewer.cameraControl.setNavigationMode("orbit");
+    // Камера
+    viewer.camera.eye = [20, 20, 20];
+    viewer.camera.look = [0, 0, 0];
+    viewer.camera.up = [0, 1, 0];
 
-  const ifcLoader = new IFCLoader(viewer);
+    // Встроенное управление камерой
+    viewer.cameraControl.setNavigationMode("orbit");
 
-  let modelEntity = null;
-  let selectedEntity = null;
+    const ifcLoader = new IFCLoader(viewer);
 
-  ifcLoader.load({
-    src: "model.ifc",
-    webIfc: {
-      wasmPath: "./web-ifc.wasm"
-    },
-    id: "myModel"
-  }).then(model => {
-    modelEntity = model;
-    console.log("IFC модель загружена!");
+    let modelEntity = null;
+    let selectedEntity = null;
 
-    viewer.cameraControl.on("picked", e => {
-      if (e.entity) {
-        viewer.scene.setObjectsHighlighted(viewer.scene.objects, false);
-        viewer.scene.setObjectsSelected(viewer.scene.objects, false);
+    ifcLoader.load({
+      src: "model.ifc",
+      webIfc: {
+        wasmPath: "./web-ifc.wasm"
+      },
+      id: "myModel"
+    }).then(model => {
+      modelEntity = model;
+      console.log("IFC модель загружена!");
 
-        e.entity.highlighted = true;
-        e.entity.selected = true;
+      // Подсветка объектов при клике
+      viewer.cameraControl.on("picked", e => {
+        if (e.entity) {
+          viewer.scene.setObjectsHighlighted(viewer.scene.objects, false);
+          viewer.scene.setObjectsSelected(viewer.scene.objects, false);
 
-        selectedEntity = e.entity;
-        console.log("Выбран объект:", e.entity.id);
-      }
+          e.entity.highlighted = true;
+          e.entity.selected = true;
+
+          selectedEntity = e.entity;
+          console.log("Выбран объект:", e.entity.id);
+        }
+      });
+    }).catch(err => {
+      console.error("Ошибка загрузки IFC:", err);
     });
-  }).catch(err => {
-    console.error("Ошибка загрузки IFC:", err);
-  });
 
-  // Остальные кнопки — без изменений
-</script>
+    // --- Панель инструментов ---
+    document.getElementById("resetCamera").onclick = () => {
+      viewer.camera.eye = [20, 20, 20];
+      viewer.camera.look = [0, 0, 0];
+      viewer.camera.up = [0, 1, 0];
+    };
+
+    document.getElementById("toggleModel").onclick = () => {
+      if (modelEntity) {
+        modelEntity.visible = !modelEntity.visible;
+      }
+    };
+
+    document.getElementById("isolate").onclick = () => {
+      if (selectedEntity) {
+        viewer.scene.setObjectsVisible(viewer.scene.objects, false);
+        selectedEntity.visible = true;
+      } else {
+        alert("Сначала выбери объект кликом по модели!");
+      }
+    };
+
+    document.getElementById("showAll").onclick = () => {
+      viewer.scene.setObjectsVisible(viewer.scene.objects, true);
+    };
+
+    document.getElementById("screenshot").onclick = () => {
+      const dataURL = viewer.getSnapshot({ format: "png" });
+      const link = document.createElement("a");
+      link.href = dataURL;
+      link.download = "screenshot.png";
+      link.click();
+    };
+
+    document.getElementById("showInfo").onclick = () => {
+      const infoDiv = document.getElementById("info");
+      if (selectedEntity) {
+        const props = selectedEntity.meta || {};
+        let html = `<b>ID:</b> ${selectedEntity.id}<br>`;
+        if (props.GlobalId) html += `<b>GUID:</b> ${props.GlobalId}<br>`;
+        if (props.Name) html += `<b>Имя:</b> ${props.Name}<br>`;
+        if (props.Type) html += `<b>Тип:</b> ${props.Type}<br>`;
+        infoDiv.innerHTML = html;
+      } else {
+        infoDiv.innerHTML = "Сначала выбери объект кликом по модели!";
+      }
+    };
+  </script>
+</body>
+</html>
