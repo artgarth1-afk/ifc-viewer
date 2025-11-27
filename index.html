@@ -211,12 +211,11 @@
         </div>
     </div>
 
-    <script src="https://unpkg.com/three@r128/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@r128/examples/js/controls/OrbitControls.js"></script>
-    <script src="https://unpkg.com/web-ifc-three@0.0.130/dist/web-ifc-three.umd.js"></script>
+    <script src="https://raw.githubusercontent.com/artgarth1-afk/ifc-viewer/main/libs/three.min.js"></script>
+    <script src="https://raw.githubusercontent.com/artgarth1-afk/ifc-viewer/main/libs/OrbitControls.js"></script>
+    <script src="https://raw.githubusercontent.com/artgarth1-afk/ifc-viewer/main/libs/web-ifc-three.umd.js"></script>
 
     <script>
-        // Ждём загрузки всех библиотек
         function initViewer() {
             if (typeof THREE === 'undefined' || typeof IFCLoader === 'undefined') {
                 setTimeout(initViewer, 100);
