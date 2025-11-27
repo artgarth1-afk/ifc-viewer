@@ -75,6 +75,8 @@
       if (!ArrayBuffer.isView(positions) || !ArrayBuffer.isView(indices)) {
         continue;
       }
+
+      // Теперь безопасно проверяем длину
       if (positions.length === 0 || indices.length === 0) {
         continue;
       }
