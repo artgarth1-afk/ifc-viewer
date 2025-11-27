@@ -68,10 +68,16 @@
       const positions = ifcAPI.GetVertexArray(modelID, geomID);
       const indices = ifcAPI.GetIndexArray(modelID, geomID);
 
-      // Проверка: массивы должны существовать и иметь длину
-      if (!positions || !indices) continue;
-      if (typeof positions.length !== "number" || typeof indices.length !== "number") continue;
-      if (positions.length === 0 || indices.length === 0) continue;
+      // Жёсткая проверка: не трогаем .length, пока не убедились что массивы существуют
+      if (!positions || !indices) {
+        continue;
+      }
+      if (!ArrayBuffer.isView(positions) || !ArrayBuffer.isView(indices)) {
+        continue;
+      }
+      if (positions.length === 0 || indices.length === 0) {
+        continue;
+      }
 
       const color = palette[expressID % palette.length];
       const meshId = "geom_" + geomID;
