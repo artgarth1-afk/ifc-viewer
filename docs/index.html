@@ -45,41 +45,40 @@
 
     const entities = [];
 
-    // Новый API: получаем список всех геометрий
-    const geomIDs = ifcAPI.GetGeometryIDs(modelID);
-    console.log("Geometry IDs:", geomIDs);
+    // В 0.0.74 GetGeometry возвращает ClassHandle с коллекцией geometries
+    const geomRoot = ifcAPI.GetGeometry(modelID);
+    console.log("geomRoot:", geomRoot);
 
-    for (const geomID of geomIDs) {
-      const geomData = ifcAPI.GetGeometry(modelID, geomID);
-      if (!geomData) continue;
+    if (geomRoot && geomRoot.geometries) {
+      for (const g of geomRoot.geometries) {
+        const positions = ifcAPI.GetVertexArray(modelID, g.geometryExpressID);
+        const indices = ifcAPI.GetIndexArray(modelID, g.geometryExpressID);
 
-      const positions = ifcAPI.GetVertexArray(modelID, geomID);
-      const indices = ifcAPI.GetIndexArray(modelID, geomID);
+        if (!positions || !indices || !positions.length || !indices.length) continue;
 
-      if (!positions || !indices || !positions.length || !indices.length) continue;
+        const color = palette[g.expressID % palette.length];
+        const meshId = "geom_" + g.geometryExpressID;
 
-      const color = palette[geomID % palette.length];
-      const meshId = "geom_" + geomID;
+        viewer.scene.addMesh({
+          id: meshId,
+          positions,
+          indices,
+          color,
+          isObject: true
+        });
 
-      viewer.scene.addMesh({
-        id: meshId,
-        positions,
-        indices,
-        color,
-        isObject: true
-      });
-
-      try {
-        const props = ifcAPI.GetLine(modelID, geomID);
-        entities.push({ id: meshId, props });
-      } catch (_) {}
+        try {
+          const props = ifcAPI.GetLine(modelID, g.expressID);
+          entities.push({ id: meshId, props });
+        } catch (_) {}
+      }
+    } else {
+      document.getElementById("info").innerText = "Не удалось получить список геометрий из API.";
     }
 
     if (viewer.scene.meshes.length > 0) {
       viewer.cameraFlight.flyTo(viewer.scene.getAABB());
       document.getElementById("info").innerText = "Модель загружена. Кликни по элементу, чтобы увидеть свойства.";
-    } else {
-      document.getElementById("info").innerText = "Геометрия не найдена или не поддерживается текущей сборкой API.";
     }
 
     viewer.cameraControl.on("picked", e => {
