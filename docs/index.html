@@ -70,7 +70,7 @@
 
       // Проверка: массивы должны существовать и иметь длину
       if (!positions || !indices) continue;
-      if (!("length" in positions) || !("length" in indices)) continue;
+      if (typeof positions.length !== "number" || typeof indices.length !== "number") continue;
       if (positions.length === 0 || indices.length === 0) continue;
 
       const color = palette[expressID % palette.length];
@@ -85,10 +85,15 @@
       });
 
       // Метаданные элемента
+      let props;
       try {
-        const props = ifcAPI.GetLine(modelID, expressID);
+        props = ifcAPI.GetLine(modelID, expressID);
+      } catch {
+        props = null;
+      }
+      if (props) {
         entities.push({ id: meshId, props });
-      } catch (_) {}
+      }
     }
 
     if (viewer.scene.meshes.length > 0) {
