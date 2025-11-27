@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <title>IFC Viewer</title>
-  <!-- Важно: UMD-бандл, а не ES-модуль -->
-  <script src="https://cdn.jsdelivr.net/npm/@xeokit/xeokit-sdk/dist/xeokit-sdk.umd.min.js"></script>
+  <!-- Попробуй через unpkg -->
+  <script src="https://unpkg.com/@xeokit/xeokit-sdk/dist/xeokit-sdk.umd.min.js"></script>
   <style>
     body { margin:0; }
     #viewer { width:100%; height:100vh; }
@@ -13,7 +13,6 @@
 <body>
   <div id="viewer"></div>
   <script>
-    // Проверим, что xeokit доступен
     console.log("xeokit:", xeokit);
 
     const viewer = new xeokit.Viewer({ canvasId: "viewer" });
@@ -26,7 +25,7 @@
     const ifcLoader = new xeokit.IFCLoader(viewer);
 
     ifcLoader.load({
-      src: "model.ifc", // файл лежит рядом с index.html в docs/
+      src: "model.ifc",
       id: "myModel"
     }).then(() => {
       console.log("IFC модель загружена!");
