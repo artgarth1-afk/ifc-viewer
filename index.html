@@ -9,12 +9,14 @@
 <body>
   <canvas id="three-canvas"></canvas>
 
-  <!-- Глобально подгружаем THREE, OrbitControls, IFCLoader через CDN -->
+  <!-- THREE + OrbitControls -->
   <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
   <script src="https://unpkg.com/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-  <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/IFCLoader.js"></script>
 
-  <!-- наш скрипт без import -->
+  <!-- Официальный UMD-бандл IFC.js, даёт глобальный IFCLoader -->
+  <script src="https://unpkg.com/web-ifc-three@0.0.102/dist/web-ifc-three.umd.js"></script>
+
+  <!-- наш код -->
   <script src="viewer.js"></script>
 </body>
 </html>
