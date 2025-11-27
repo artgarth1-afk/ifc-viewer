@@ -2,12 +2,24 @@
 // 1. Импортируем Viewer и WebIFCLoaderPlugin из Xeokit
 import { Viewer, WebIFCLoaderPlugin } from "./xeokit-sdk.es.js";
 
-// 2. ИСПРАВЛЕНИЕ: Импортируем модуль полностью как объект.
+// 2. Импортируем модуль полностью как объект (WebIFCModule).
 import * as WebIFCModule from "./web-ifc-api.js"; 
 
-// 3. Извлекаем конструктор WebIFC из импортированного объекта.
-// Это решает проблему "Uncaught Parameter expected: WebIFC".
-const WebIFCConstructor = WebIFCModule.WebIFC;
+// --- ОТЛАДОЧНЫЙ КОД ---
+// Если снова возникнет ошибка "Uncaught Parameter expected: WebIFC",
+// пожалуйста, посмотрите в консоли, что выводит эта строка, и сообщите мне.
+console.log("Импортированный WebIFCModule:", WebIFCModule);
+// -----------------------
+
+// 3. Извлекаем конструктор. Для гибридных модулей это часто свойство .default
+// или, возможно, .WebIFC (как мы пробовали ранее). Попробуем .default, как наиболее общий случай.
+const WebIFCConstructor = WebIFCModule.default || WebIFCModule.WebIFC;
+
+// Если WebIFCConstructor все еще undefined (такое бывает в некоторых сборках),
+// попробуем использовать сам импортированный объект (как в последнем шаге):
+// if (!WebIFCConstructor) {
+//     WebIFCConstructor = WebIFCModule;
+// }
 
 
 // 1. Инициализация Viewer (сцена)
@@ -23,11 +35,10 @@ viewer.camera.up = [-0.01, 0.99, 0.039];
 
 
 // 2. Настройка загрузчика IFC
-// ОКОНЧАТЕЛЬНОЕ ИСПРАВЛЕНИЕ: Передаем найденный конструктор
 const ifcLoader = new WebIFCLoaderPlugin(viewer, {
     wasmPath: "./",       // Путь к файлу .wasm (должен лежать рядом)
     
-    // Передаем конструктор класса WebIFC
+    // Передаем извлеченный конструктор
     webIFC: WebIFCConstructor 
 });
 
