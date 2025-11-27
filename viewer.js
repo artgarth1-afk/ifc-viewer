@@ -1,17 +1,22 @@
+// Проверка, что UMD подгрузился
 console.log("web-ifc-three global:", window.WebIFC, window.IFCLoader);
 
+// 1. Сцена
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xcccccc);
 
+// 2. Размеры
 const size = {
   width: window.innerWidth,
   height: window.innerHeight
 };
 
+// 3. Камера
 const aspect = size.width / size.height;
 const camera = new THREE.PerspectiveCamera(75, aspect);
 camera.position.set(8, 13, 15);
 
+// 4. Свет
 const lightColor = 0xffffff;
 const ambientLight = new THREE.AmbientLight(lightColor, 0.5);
 scene.add(ambientLight);
@@ -22,6 +27,7 @@ directionalLight.target.position.set(-5, 0, 0);
 scene.add(directionalLight);
 scene.add(directionalLight.target);
 
+// 5. Рендерер
 const canvas = document.getElementById("three-canvas");
 const renderer = new THREE.WebGLRenderer({
   canvas,
@@ -31,6 +37,7 @@ const renderer = new THREE.WebGLRenderer({
 renderer.setSize(size.width, size.height);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
+// 6. Сетка и оси
 const grid = new THREE.GridHelper(50, 30);
 scene.add(grid);
 
@@ -39,28 +46,35 @@ axes.material.depthTest = false;
 axes.renderOrder = 1;
 scene.add(axes);
 
+// 7. OrbitControls
 const controls = new THREE.OrbitControls(camera, canvas);
 controls.enableDamping = true;
 controls.target.set(-2, 0, 0);
 
-// ВАЖНО: класс из UMD лежит как IFCLoader.IFCLoader
+// 8. IFCLoader из UMD web-ifc-three
+// В этой версии класс в глобале лежит как IFCLoader.IFCLoader
 const ifcLoader = new IFCLoader.IFCLoader();
 
-// web-ifc.wasm положи рядом с viewer.js, иначе поправь путь
-// временно можно закомментировать, чтобы проверить, что всё остальное работает
+// Путь к web-ifc.wasm.
+// СКОПИРУЙ web-ifc.wasm в корень репо (рядом с viewer.js).
 ifcLoader.ifcManager.setWasmPath("./");
 
+// IFC из репозитория через jsDelivr
+// Убедись, что файл называется model.ifc (нижний регистр)
 const IFC_URL = "https://cdn.jsdelivr.net/gh/artgarth1-afk/ifc-viewer@main/model.ifc";
 
+// Загрузка IFC
 ifcLoader.load(
   IFC_URL,
   (ifcModel) => {
-    scene.add(ifcModel.mesh || ifcModel);
+    const obj = ifcModel.mesh || ifcModel;
+    scene.add(obj);
 
-    const box = new THREE.Box3().setFromObject(ifcModel.mesh || ifcModel);
+    // Автокадрирование
+    const box = new THREE.Box3().setFromObject(obj);
     const sizeBox = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const maxSize = Math.max(sizeBox.x, sizeBox.y, sizeBox.z);
+    const maxSize = Math.max(sizeBox.x, sizeBox.y, sizeBox.z) || 1;
     const distance = maxSize * 2;
 
     camera.position.set(center.x + distance, center.y + distance, center.z + distance);
@@ -73,6 +87,7 @@ ifcLoader.load(
   }
 );
 
+// 9. Анимация
 function animate() {
   requestAnimationFrame(animate);
   controls.update();
@@ -80,6 +95,7 @@ function animate() {
 }
 animate();
 
+// 10. Ресайз
 window.addEventListener("resize", () => {
   size.width = window.innerWidth;
   size.height = window.innerHeight;
