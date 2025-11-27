@@ -5,36 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IFC Viewer</title>
     <style>
+        /* Убираем отступы, чтобы канвас был на весь экран */
         body, html {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
+            background-color: #f0f0f0;
         }
         #myCanvas {
             width: 100%;
             height: 100%;
             display: block;
         }
-        /* Простой спиннер загрузки */
+        /* Стили для загрузчика */
         #loader {
             position: absolute;
-            top: 50%; left: 50%;
+            top: 50%;
+            left: 50%;
             transform: translate(-50%, -50%);
+            padding: 20px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
             font-family: sans-serif;
-            font-size: 1.2em;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 10px 20px;
-            border-radius: 5px;
-            pointer-events: none;
+            font-size: 16px;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
     <div id="loader">Загрузка модели...</div>
+
     <canvas id="myCanvas"></canvas>
+
+    <script src="./web-ifc-api.js"></script>
 
     <script type="module" src="./viewer.js"></script>
 
