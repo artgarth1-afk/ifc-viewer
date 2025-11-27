@@ -68,9 +68,9 @@
       const positions = ifcAPI.GetVertexArray(modelID, geomID);
       const indices = ifcAPI.GetIndexArray(modelID, geomID);
 
-      // Жёсткая проверка: массивы должны существовать и быть типизированными
-      if (!(positions && positions.buffer && typeof positions.length === "number")) continue;
-      if (!(indices && indices.buffer && typeof indices.length === "number")) continue;
+      // Проверка: массивы должны существовать и иметь длину
+      if (!positions || !indices) continue;
+      if (!("length" in positions) || !("length" in indices)) continue;
       if (positions.length === 0 || indices.length === 0) continue;
 
       const color = palette[expressID % palette.length];
