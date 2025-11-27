@@ -58,9 +58,8 @@
         continue; // элемент без геометрии
       }
 
-      // Проверяем, что у элемента есть geometryExpressID
       if (!geomData || typeof geomData.geometryExpressID !== "number") {
-        continue;
+        continue; // пропускаем негеометрические элементы
       }
 
       const geomID = geomData.geometryExpressID;
@@ -69,9 +68,9 @@
       const positions = ifcAPI.GetVertexArray(modelID, geomID);
       const indices = ifcAPI.GetIndexArray(modelID, geomID);
 
-      // Проверяем, что массивы существуют и имеют длину
-      if (!positions || !indices) continue;
-      if (typeof positions.length !== "number" || typeof indices.length !== "number") continue;
+      // Жёсткая проверка: массивы должны существовать и быть типизированными
+      if (!(positions instanceof Float32Array)) continue;
+      if (!(indices instanceof Uint32Array || indices instanceof Uint16Array)) continue;
       if (positions.length === 0 || indices.length === 0) continue;
 
       const color = palette[expressID % palette.length];
@@ -85,7 +84,6 @@
         isObject: true
       });
 
-      // Метаданные элемента
       try {
         const props = ifcAPI.GetLine(modelID, expressID);
         entities.push({ id: meshId, props });
