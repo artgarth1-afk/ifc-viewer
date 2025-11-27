@@ -1,9 +1,9 @@
-// Импорт библиотек
+// Импортируем xeokit и web-ifc
 import { Viewer, WebIFCLoaderPlugin } from "./xeokit-sdk.es.js";
 import * as WebIFCModule from "./web-ifc-api.js";
 
-// Берём конструктор WebIFC из модуля web-ifc
-const WebIFCConstructor = WebIFCModule.WebIFC;
+// Важный момент: передаём в xeokit весь модуль web-ifc, а не свойство .WebIFC
+const WebIFCConstructor = WebIFCModule;
 
 // 1. Создаём Viewer
 const viewer = new Viewer({
@@ -11,14 +11,16 @@ const viewer = new Viewer({
   transparent: true
 });
 
-// Начальная позиция камеры (можно потом подправить под модель)
+// Начальная позиция камеры (можете потом подправить под свою модель)
 viewer.camera.eye = [-3.93, 2.85, 27.01];
 viewer.camera.look = [4.4, 3.72, 8.89];
 viewer.camera.up = [-0.01, 0.99, 0.039];
 
 // 2. Подключаем WebIFCLoaderPlugin
 const ifcLoader = new WebIFCLoaderPlugin(viewer, {
-  wasmPath: "./",          // web-ifc.wasm лежит в docs рядом с этим файлом
+  // Путь к web-ifc.wasm относительно этого файла (docs/web-ifc.wasm)
+  wasmPath: "./",
+  // Сюда передаём модуль web-ifc
   webIFC: WebIFCConstructor
 });
 
@@ -32,18 +34,18 @@ const model = ifcLoader.load({
 // 4. Обработка событий загрузки
 model.on("loaded", () => {
   console.log("Модель успешно загружена!");
+
   const loader = document.getElementById("loader");
   if (loader) loader.style.display = "none";
 
-  // Летим камерой к модели
+  // Летим камерой к модели, чтобы она целиком попала в кадр
   viewer.cameraFlight.flyTo(model);
 });
 
 model.on("error", (error) => {
   console.error("Ошибка при загрузке модели:", error);
+
   const loader = document.getElementById("loader");
   if (loader) {
     loader.innerText = "Ошибка загрузки! Проверьте консоль (F12)";
-    loader.style.color = "red";
-  }
-});
+    loader.style.color =
