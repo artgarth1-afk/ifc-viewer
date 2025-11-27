@@ -37,7 +37,8 @@
   <div id="info">Выберите объект, затем нажмите «Информация об объекте»</div>
 
   <script type="module">
-    import { Viewer, IFCLoader } from './xeokit-sdk.es.js';
+    import { Viewer } from './xeokit-sdk.es.js';
+    import { IFCLoader } from 'https://cdn.jsdelivr.net/npm/@xeokit/ifc/dist/xeokit-ifc.es.js';
 
     const viewer = new Viewer({ canvasId: "viewer" });
 
@@ -46,7 +47,7 @@
     viewer.camera.look = [0, 0, 0];
     viewer.camera.up = [0, 1, 0];
 
-    // Встроенное управление камерой
+    // Управление камерой
     viewer.cameraControl.setNavigationMode("orbit");
 
     const ifcLoader = new IFCLoader(viewer);
@@ -64,7 +65,6 @@
       modelEntity = model;
       console.log("IFC модель загружена!");
 
-      // Подсветка объектов при клике
       viewer.cameraControl.on("picked", e => {
         if (e.entity) {
           viewer.scene.setObjectsHighlighted(viewer.scene.objects, false);
