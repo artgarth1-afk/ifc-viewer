@@ -5,12 +5,12 @@
   <title>IFC Viewer (WebIFC + Xeokit)</title>
   <style>
     body { margin:0; font-family: sans-serif; }
-    #viewer { width:100%; height:90vh; }
+    #viewer { width:100%; height:90vh; display:block; }
     #info { height:10vh; overflow:auto; padding:5px; background:#f9f9f9; border-top:1px solid #ccc; }
   </style>
 </head>
 <body>
-  <div id="viewer"></div>
+  <canvas id="viewer"></canvas>
   <div id="info">Здесь будет информация об объекте</div>
 
   <script type="module">
@@ -34,19 +34,21 @@
 
     console.log("IFC открыт:", modelID);
 
-    // Получаем список элементов IFC
-    const allItems = ifcAPI.GetAllItemsOfType(modelID, ifcAPI.typesIfc.IFCBUILDINGELEMENT, true);
-    console.log("Элементы IFC:", allItems);
+    // Получаем геометрию IFC
+    const geometries = ifcAPI.GetGeometry(modelID);
 
-    // Простейшее отображение: создаём примитивы в Viewer
-    // (для реальной геометрии нужен парсинг mesh через WebIFC)
-    for (const item of allItems) {
-      const props = ifcAPI.GetLine(modelID, item);
-      viewer.scene.addEntity({
-        id: "ifc_" + item,
-        isObject: true,
-        aabb: [-1,-1,-1, 1,1,1], // временный куб
-        meta: props
+    // Добавляем каждую геометрию в Viewer
+    for (const geom of geometries) {
+      const verts = ifcAPI.GetVertexArray(modelID, geom.geometryExpressID);
+      const indices = ifcAPI.GetIndexArray(modelID, geom.geometryExpressID);
+
+      // Создаём меш в xeokit
+      viewer.scene.addMesh({
+        id: "geom_" + geom.geometryExpressID,
+        positions: verts,
+        indices: indices,
+        color: [0.6, 0.6, 0.8], // серо‑голубой
+        isObject: true
       });
     }
 
@@ -58,8 +60,7 @@
         e.entity.highlighted = true;
         selectedEntity = e.entity;
         document.getElementById("info").innerHTML =
-          `<b>ID:</b> ${e.entity.id}<br>` +
-          `<b>Props:</b> ${JSON.stringify(e.entity.meta)}`;
+          `<b>ID:</b> ${e.entity.id}`;
       }
     });
   </script>
