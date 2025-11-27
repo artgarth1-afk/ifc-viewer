@@ -69,8 +69,8 @@
       const indices = ifcAPI.GetIndexArray(modelID, geomID);
 
       // Жёсткая проверка: массивы должны существовать и быть типизированными
-      if (!(positions instanceof Float32Array)) continue;
-      if (!(indices instanceof Uint32Array || indices instanceof Uint16Array)) continue;
+      if (!(positions && positions.buffer && typeof positions.length === "number")) continue;
+      if (!(indices && indices.buffer && typeof indices.length === "number")) continue;
       if (positions.length === 0 || indices.length === 0) continue;
 
       const color = palette[expressID % palette.length];
@@ -84,6 +84,7 @@
         isObject: true
       });
 
+      // Метаданные элемента
       try {
         const props = ifcAPI.GetLine(modelID, expressID);
         entities.push({ id: meshId, props });
