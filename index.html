@@ -4,10 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>IFC Model Viewer</title>
-    <script async src="https://cdn.jsdelivr.net/npm/three@r128/build/three.min.js"></script>
-    <script async src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
-    <script async src="https://cdn.jsdelivr.net/npm/web-ifc@0.0.44/web-ifc-api.js"></script>
-    <script async src="https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.130/dist/web-ifc-three.umd.js"></script>
     <style>
         * {
             margin: 0;
@@ -80,17 +76,6 @@
             cursor: pointer;
             transition: all 0.2s ease;
             margin-bottom: 8px;
-        }
-        
-        .btn-primary {
-            background: #2d3748;
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #1a202c;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
         
         .btn-secondary {
@@ -216,191 +201,186 @@
     <div class="info-panel">
         <div class="info-title">Model Information</div>
         <div id="infoContent" class="info-content">
-            Ready to load IFC model.<br>
+            Initializing viewer...<br>
             <span class="help-text">
                 <strong>Controls:</strong><br>
                 • Left Mouse: Rotate<br>
                 • Right Mouse: Pan<br>
-                • Scroll: Zoom<br>
-                • Click objects: Select
+                • Scroll: Zoom
             </span>
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@r128/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/web-ifc-three@0.0.130/dist/web-ifc-three.umd.js"></script>
+
     <script>
-        // Scene setup
-        const container = document.getElementById('viewer-container');
-        const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xcccccc);
-        
-        const size = {
-            width: window.innerWidth,
-            height: window.innerHeight
-        };
-        
-        const camera = new THREE.PerspectiveCamera(75, size.width / size.height, 0.1, 1000);
-        camera.position.z = 50;
-        
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
-        renderer.setSize(size.width, size.height);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-        container.appendChild(renderer.domElement);
-        
-        // Lighting
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-        
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-        directionalLight.position.set(10, 20, 10);
-        directionalLight.castShadow = true;
-        scene.add(directionalLight);
-        
-        // Grid and axes
-        const gridHelper = new THREE.GridHelper(100, 50, 0x888888, 0xcccccc);
-        scene.add(gridHelper);
-        
-        const axesHelper = new THREE.AxesHelper(20);
-        scene.add(axesHelper);
-        
-        // Controls
-        const controls = new THREE.OrbitControls(camera, renderer.domElement);
-        controls.enableDamping = true;
-        controls.dampingFactor = 0.05;
-        controls.enableZoom = true;
-        
-        // IFC Loader
-        const ifcLoader = new IFCLoader();
-        let ifcModel = null;
-        
-        // UI Elements
-        const fitViewBtn = document.getElementById('fitViewBtn');
-        const resetCameraBtn = document.getElementById('resetCameraBtn');
-        const toggleGridBtn = document.getElementById('toggleGridBtn');
-        const toggleAxesBtn = document.getElementById('toggleAxesBtn');
-        const loadingIndicator = document.getElementById('loadingIndicator');
-        const errorMessage = document.getElementById('errorMessage');
-        const infoContent = document.getElementById('infoContent');
-        
-        let gridVisible = true;
-        let axesVisible = true;
-        
-        // Load IFC model
-        function loadIFCModel(file) {
-            loadingIndicator.classList.add('active');
-            errorMessage.classList.remove('show');
-            
-            try {
-                const url = URL.createObjectURL(file);
-                ifcLoader.load(url, (ifcModel) => {
-                    if (scene.children.includes(ifcModel)) {
-                        scene.remove(ifcModel);
-                    }
-                    scene.add(ifcModel);
-                    
-                    // Fit camera to model
-                    fitCameraToObject();
-                    
-                    loadingIndicator.classList.remove('active');
-                    updateInfo(`Model loaded successfully!<br>Objects: ${getObjectCount(ifcModel)}`);
-                    
-                    URL.revokeObjectURL(url);
-                }, undefined, (error) => {
-                    showError('Failed to load IFC model: ' + error.message);
-                    loadingIndicator.classList.remove('active');
-                });
-            } catch (err) {
-                showError('Error: ' + err.message);
-                loadingIndicator.classList.remove('active');
+        // Ждём загрузки всех библиотек
+        function initViewer() {
+            if (typeof THREE === 'undefined' || typeof IFCLoader === 'undefined') {
+                setTimeout(initViewer, 100);
+                return;
             }
-        }
-        
-        // Fit camera to object
-        function fitCameraToObject() {
-            const box = new THREE.Box3().setFromObject(scene);
-            const size = box.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const fov = camera.fov * (Math.PI / 180);
-            let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+
+            const container = document.getElementById('viewer-container');
+            const scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xcccccc);
             
-            cameraZ *= 1.5;
-            camera.position.z = cameraZ;
+            const size = {
+                width: window.innerWidth,
+                height: window.innerHeight
+            };
             
-            const centerOffsetZ = -0.2;
-            camera.position.copy(box.getCenter(new THREE.Vector3()));
-            camera.position.z += cameraZ + centerOffsetZ;
+            const camera = new THREE.PerspectiveCamera(75, size.width / size.height, 0.1, 1000);
+            camera.position.z = 50;
             
-            camera.lookAt(box.getCenter(new THREE.Vector3()));
-            controls.target.copy(box.getCenter(new THREE.Vector3()));
-            controls.update();
-        }
-        
-        // Get object count
-        function getObjectCount(obj) {
-            let count = 0;
-            obj.traverse(() => count++);
-            return count;
-        }
-        
-        // Update info panel
-        function updateInfo(text) {
-            infoContent.innerHTML = text;
-        }
-        
-        // Show error
-        function showError(msg) {
-            errorMessage.textContent = msg;
-            errorMessage.classList.add('show');
-        }
-        
-        // Button events
-        fitViewBtn.addEventListener('click', fitCameraToObject);
-        
-        resetCameraBtn.addEventListener('click', () => {
-            camera.position.set(50, 50, 50);
-            camera.lookAt(0, 0, 0);
-            controls.target.set(0, 0, 0);
-            controls.update();
-        });
-        
-        toggleGridBtn.addEventListener('click', () => {
-            gridVisible = !gridVisible;
-            gridHelper.visible = gridVisible;
-            toggleGridBtn.style.background = gridVisible ? '#2d3748' : '#e2e8f0';
-            toggleGridBtn.style.color = gridVisible ? 'white' : '#2d3748';
-        });
-        
-        toggleAxesBtn.addEventListener('click', () => {
-            axesVisible = !axesVisible;
-            axesHelper.visible = axesVisible;
-            toggleAxesBtn.style.background = axesVisible ? '#2d3748' : '#e2e8f0';
-            toggleAxesBtn.style.color = axesVisible ? 'white' : '#2d3748';
-        });
-        
-        // Handle window resize
-        window.addEventListener('resize', () => {
-            size.width = window.innerWidth;
-            size.height = window.innerHeight;
-            camera.aspect = size.width / size.height;
-            camera.updateProjectionMatrix();
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(size.width, size.height);
-        });
-        
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            controls.update();
-            renderer.render(scene, camera);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            container.appendChild(renderer.domElement);
+            
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+            scene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(10, 20, 10);
+            directionalLight.castShadow = true;
+            scene.add(directionalLight);
+            
+            const gridHelper = new THREE.GridHelper(100, 50, 0x888888, 0xcccccc);
+            scene.add(gridHelper);
+            
+            const axesHelper = new THREE.AxesHelper(20);
+            scene.add(axesHelper);
+            
+            const controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.enableZoom = true;
+            
+            const ifcLoader = new IFCLoader();
+            let ifcModel = null;
+            
+            const fitViewBtn = document.getElementById('fitViewBtn');
+            const resetCameraBtn = document.getElementById('resetCameraBtn');
+            const toggleGridBtn = document.getElementById('toggleGridBtn');
+            const toggleAxesBtn = document.getElementById('toggleAxesBtn');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            const errorMessage = document.getElementById('errorMessage');
+            const infoContent = document.getElementById('infoContent');
+            
+            let gridVisible = true;
+            let axesVisible = true;
+            
+            function loadIFCModel(file) {
+                loadingIndicator.classList.add('active');
+                errorMessage.classList.remove('show');
+                
+                try {
+                    const url = URL.createObjectURL(file);
+                    ifcLoader.load(url, (loadedModel) => {
+                        if (ifcModel && scene.children.includes(ifcModel)) {
+                            scene.remove(ifcModel);
+                        }
+                        ifcModel = loadedModel;
+                        scene.add(ifcModel);
+                        
+                        fitCameraToObject();
+                        
+                        loadingIndicator.classList.remove('active');
+                        infoContent.innerHTML = `Model loaded successfully!<br>Objects: ${getObjectCount(ifcModel)}`;
+                        
+                        URL.revokeObjectURL(url);
+                    }, undefined, (error) => {
+                        showError('Failed to load IFC model: ' + error.message);
+                        loadingIndicator.classList.remove('active');
+                    });
+                } catch (err) {
+                    showError('Error: ' + err.message);
+                    loadingIndicator.classList.remove('active');
+                }
+            }
+            
+            function fitCameraToObject() {
+                const box = new THREE.Box3().setFromObject(scene);
+                const size = box.getSize(new THREE.Vector3());
+                const maxDim = Math.max(size.x, size.y, size.z);
+                const fov = camera.fov * (Math.PI / 180);
+                let cameraZ = Math.abs(maxDim / 2 / Math.tan(fov / 2));
+                
+                cameraZ *= 1.5;
+                camera.position.z = cameraZ;
+                
+                const centerOffsetZ = -0.2;
+                camera.position.copy(box.getCenter(new THREE.Vector3()));
+                camera.position.z += cameraZ + centerOffsetZ;
+                
+                camera.lookAt(box.getCenter(new THREE.Vector3()));
+                controls.target.copy(box.getCenter(new THREE.Vector3()));
+                controls.update();
+            }
+            
+            function getObjectCount(obj) {
+                let count = 0;
+                obj.traverse(() => count++);
+                return count;
+            }
+            
+            function showError(msg) {
+                errorMessage.textContent = msg;
+                errorMessage.classList.add('show');
+            }
+            
+            fitViewBtn.addEventListener('click', fitCameraToObject);
+            
+            resetCameraBtn.addEventListener('click', () => {
+                camera.position.set(50, 50, 50);
+                camera.lookAt(0, 0, 0);
+                controls.target.set(0, 0, 0);
+                controls.update();
+            });
+            
+            toggleGridBtn.addEventListener('click', () => {
+                gridVisible = !gridVisible;
+                gridHelper.visible = gridVisible;
+                toggleGridBtn.style.background = gridVisible ? '#2d3748' : '#e2e8f0';
+                toggleGridBtn.style.color = gridVisible ? 'white' : '#2d3748';
+            });
+            
+            toggleAxesBtn.addEventListener('click', () => {
+                axesVisible = !axesVisible;
+                axesHelper.visible = axesVisible;
+                toggleAxesBtn.style.background = axesVisible ? '#2d3748' : '#e2e8f0';
+                toggleAxesBtn.style.color = axesVisible ? 'white' : '#2d3748';
+            });
+            
+            window.addEventListener('resize', () => {
+                size.width = window.innerWidth;
+                size.height = window.innerHeight;
+                camera.aspect = size.width / size.height;
+                camera.updateProjectionMatrix();
+                renderer.setSize(size.width, size.height);
+            });
+            
+            function animate() {
+                requestAnimationFrame(animate);
+                controls.update();
+                renderer.render(scene, camera);
+            }
+            animate();
+            
+            const modelPath = './model.ifc';
+            fetch(modelPath)
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                    return res.blob();
+                })
+                .then(blob => loadIFCModel(blob))
+                .catch(err => showError('Failed to load model: ' + err.message));
         }
-        animate();
-        
-        // Auto-load model from repository
-        const modelPath = './model.ifc'; // Загружает model.ifc из корня репозитория
-        fetch(modelPath)
-            .then(res => res.blob())
-            .then(blob => {
-                loadIFCModel(blob);
-            })
-            .catch(err => showError('Failed to load model: ' + err.message));
+
+        initViewer();
     </script>
 </body>
 </html>
