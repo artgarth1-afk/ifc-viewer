@@ -1,66 +1,49 @@
 // Импорт библиотек
-// 1. Импортируем Viewer и WebIFCLoaderPlugin из Xeokit
 import { Viewer, WebIFCLoaderPlugin } from "./xeokit-sdk.es.js";
+import * as WebIFCModule from "./web-ifc-api.js";
 
-// 2. Импортируем модуль полностью как объект (WebIFCModule).
-import * as WebIFCModule from "./web-ifc-api.js"; 
-
-// ----------------------------------------------------------------------------------
-// --- КРИТИЧЕСКИ ВАЖНЫЙ КОД ---
-// Эта строка выведет в консоль объект, который вы получили при импорте.
-// Нам нужно знать, какое свойство содержит класс WebIFC.
-console.log("Импортированный WebIFCModule:", WebIFCModule);
-// -----------------------------
-// Мы пробуем самое логичное свойство:
+// Берём конструктор WebIFC из модуля web-ifc
 const WebIFCConstructor = WebIFCModule.WebIFC;
 
-// 1. Инициализация Viewer (сцена)
+// 1. Создаём Viewer
 const viewer = new Viewer({
-    canvasId: "myCanvas",
-    transparent: true
+  canvasId: "myCanvas",
+  transparent: true
 });
 
-// Настройка начальной позиции камеры
+// Начальная позиция камеры (можно потом подправить под модель)
 viewer.camera.eye = [-3.93, 2.85, 27.01];
-viewer.camera.look = [4.40, 3.72, 8.89];
+viewer.camera.look = [4.4, 3.72, 8.89];
 viewer.camera.up = [-0.01, 0.99, 0.039];
 
-
-// 2. Настройка загрузчика IFC
-// Передаем извлеченный конструктор
+// 2. Подключаем WebIFCLoaderPlugin
 const ifcLoader = new WebIFCLoaderPlugin(viewer, {
-    wasmPath: "./",       // Путь к файлу .wasm (должен лежать рядом)
-    
-    // Передаем конструктор класса WebIFC
-    webIFC: WebIFCConstructor 
+  wasmPath: "./",          // web-ifc.wasm лежит в docs рядом с этим файлом
+  webIFC: WebIFCConstructor
 });
 
-
-// 3. Загрузка модели
+// 3. Загружаем единственную модель из docs/model.ifc
 const model = ifcLoader.load({
-    id: "myModel",
-    src: "./model.ifc",   // Имя вашего файла
-    edges: true           // Показывать грани
+  id: "myModel",
+  src: "./model.ifc",
+  edges: true
 });
 
-
-// 4. События загрузки
+// 4. Обработка событий загрузки
 model.on("loaded", () => {
-    console.log("Модель успешно загружена!");
-    
-    // Скрываем спиннер
-    const loader = document.getElementById("loader");
-    if (loader) loader.style.display = "none";
+  console.log("Модель успешно загружена!");
+  const loader = document.getElementById("loader");
+  if (loader) loader.style.display = "none";
 
-    // Плавно летим камерой к модели, чтобы её было видно целиком
-    viewer.cameraFlight.flyTo(model);
+  // Летим камерой к модели
+  viewer.cameraFlight.flyTo(model);
 });
 
 model.on("error", (error) => {
-    console.error("Ошибка при загрузке модели:", error);
-    const loader = document.getElementById("loader");
-    if (loader) {
-        loader.innerText = "Ошибка загрузки! Проверьте консоль (F12)";
-        loader.style.color = "red";
-    }
+  console.error("Ошибка при загрузке модели:", error);
+  const loader = document.getElementById("loader");
+  if (loader) {
+    loader.innerText = "Ошибка загрузки! Проверьте консоль (F12)";
+    loader.style.color = "red";
+  }
 });
