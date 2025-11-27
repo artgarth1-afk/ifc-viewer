@@ -3,14 +3,16 @@
 import { Viewer, WebIFCLoaderPlugin } from "./xeokit-sdk.es.js";
 
 // 2. Импортируем модуль полностью как объект (WebIFCModule).
-// Это единственный синтаксис, который не вызывает Uncaught SyntaxError.
 import * as WebIFCModule from "./web-ifc-api.js"; 
 
-// 3. Извлекаем конструктор WebIFC.
-// Мы используем универсальный подход: ищем в .default (стандарт ES6) 
-// и в .WebIFC (часто используется в сборках).
-// Это должно найти класс независимо от того, как его "спрятали".
-const WebIFCConstructor = WebIFCModule.default || WebIFCModule.WebIFC || WebIFCModule;
+// ----------------------------------------------------------------------------------
+// --- КРИТИЧЕСКИ ВАЖНЫЙ КОД ---
+// Эта строка выведет в консоль объект, который вы получили при импорте.
+// Нам нужно знать, какое свойство содержит класс WebIFC.
+console.log("Импортированный WebIFCModule:", WebIFCModule);
+// -----------------------------
+// Мы пробуем самое логичное свойство:
+const WebIFCConstructor = WebIFCModule.WebIFC;
 
 // 1. Инициализация Viewer (сцена)
 const viewer = new Viewer({
@@ -25,7 +27,7 @@ viewer.camera.up = [-0.01, 0.99, 0.039];
 
 
 // 2. Настройка загрузчика IFC
-// ПЕРЕДАЕМ ИЗВЛЕЧЕННЫЙ КОНСТРУКТОР
+// Передаем извлеченный конструктор
 const ifcLoader = new WebIFCLoaderPlugin(viewer, {
     wasmPath: "./",       // Путь к файлу .wasm (должен лежать рядом)
     
