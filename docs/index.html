@@ -27,7 +27,7 @@
     viewer.camera.look = [0, 0, 0];
     viewer.camera.up = [0, 1, 0];
 
-    // WebIFC 0.0.74 — Init без аргументов
+    // Инициализация WebIFC (v0.0.74) — без аргументов
     const ifcAPI = new IfcAPI();
     await ifcAPI.Init();
 
@@ -51,94 +51,59 @@
 
     const entities = [];
 
-    // Универсальная загрузка геометрии:
-    // 1) Сначала пробуем новый путь — получить IDs геометрии
-    let geometryIDs = [];
-    if (typeof ifcAPI.GetGeometryIDs === "function") {
-      try {
-        geometryIDs = ifcAPI.GetGeometryIDs(modelID) || [];
-      } catch (e) {
-        console.warn("GetGeometryIDs не сработал:", e);
-      }
+    // Получаем все элементы типа IfcProduct (0), включая подтипы
+    let allIDs = [];
+    try {
+      allIDs = ifcAPI.GetAllItemsOfType(modelID, 0, true) || [];
+    } catch (e) {
+      console.error("GetAllItemsOfType ошибка:", e);
+      document.getElementById("info").innerText = "Не удалось получить список элементов IfcProduct.";
     }
 
-    if (Array.isArray(geometryIDs) && geometryIDs.length > 0) {
-      // Новый API: по каждому ID берём массивы вершин/индексов
-      for (const geomID of geometryIDs) {
-        const positions = ifcAPI.GetVertexArray(modelID, geomID);
-        const indices = ifcAPI.GetIndexArray(modelID, geomID);
-
-        if (!positions || positions.length === 0 || !indices || indices.length === 0) continue;
-
-        // Попробуем получить связанный элемент (если поддерживается)
-        let expressID = geomID; // запасной вариант
-        if (typeof ifcAPI.GetGeometry === "function") {
-          try {
-            const g = ifcAPI.GetGeometry(modelID, geomID);
-            if (g && typeof g.expressID === "number") expressID = g.expressID;
-          } catch (_) { /* пропустим */ }
-        }
-
-        const color = palette[expressID % palette.length];
-        const meshId = "geom_" + geomID;
-
-        viewer.scene.addMesh({
-          id: meshId,
-          positions,
-          indices,
-          color,
-          isObject: true
-        });
-
-        // Метаданные элемента
-        try {
-          const props = ifcAPI.GetLine(modelID, expressID);
-          entities.push({ id: meshId, props });
-        } catch (_) {}
-      }
-    } else {
-      // 2) Фолбэк: старый путь — GetGeometry(modelID) возвращает массив дескрипторов
-      let geometries = null;
+    // Построение геометрии по каждому элементу
+    for (const expressID of allIDs) {
+      let geomData = null;
       try {
-        geometries = ifcAPI.GetGeometry(modelID);
+        geomData = ifcAPI.GetGeometry(modelID, expressID);
       } catch (e) {
-        console.error("GetGeometry(modelID) не сработал:", e);
+        // Если элемент без геометрии или API вернул ClassHandle без нужных полей — пропускаем
+        continue;
       }
+      if (!geomData || typeof geomData.geometryExpressID !== "number") continue;
 
-      if (Array.isArray(geometries)) {
-        for (const g of geometries) {
-          const positions = ifcAPI.GetVertexArray(modelID, g.geometryExpressID);
-          const indices = ifcAPI.GetIndexArray(modelID, g.geometryExpressID);
+      const geomID = geomData.geometryExpressID;
 
-          if (!positions || positions.length === 0 || !indices || indices.length === 0) continue;
+      // Получаем массивы вершин/индексов
+      const positions = ifcAPI.GetVertexArray(modelID, geomID);
+      const indices = ifcAPI.GetIndexArray(modelID, geomID);
 
-          const expressID = typeof g.expressID === "number" ? g.expressID : g.geometryExpressID;
-          const color = palette[expressID % palette.length];
-          const meshId = "geom_" + g.geometryExpressID;
+      if (!positions || !indices) continue;
+      if (!positions.length || !indices.length) continue;
 
-          viewer.scene.addMesh({
-            id: meshId,
-            positions,
-            indices,
-            color,
-            isObject: true
-          });
+      const color = palette[expressID % palette.length];
+      const meshId = "geom_" + geomID;
 
-          try {
-            const props = ifcAPI.GetLine(modelID, expressID);
-            entities.push({ id: meshId, props });
-          } catch (_) {}
-        }
-      } else {
-        console.error("Не удалось получить геометрию: API вернул", geometries);
-      }
+      viewer.scene.addMesh({
+        id: meshId,
+        positions,
+        indices,
+        color,
+        isObject: true
+      });
+
+      // Метаданные элемента
+      try {
+        const props = ifcAPI.GetLine(modelID, expressID);
+        entities.push({ id: meshId, props });
+      } catch (_) {}
     }
 
     // Автоподгон камеры
     if (viewer.scene.meshes.length > 0) {
       viewer.cameraFlight.flyTo(viewer.scene.getAABB());
+      document.getElementById("info").innerText = "Модель загружена. Кликни по элементу, чтобы увидеть свойства.";
     } else {
-      document.getElementById("info").innerText = "Геометрия не найдена в IFC или не поддерживается текущей версией API.";
+      document.getElementById("info").innerText = "Геометрия не найдена или не поддерживается текущей сборкой API.";
     }
 
     // Пик и инфо
