@@ -57,15 +57,22 @@
       } catch {
         continue; // элемент без геометрии
       }
-      if (!geomData || typeof geomData.geometryExpressID !== "number") continue;
+
+      // Проверяем, что у элемента есть geometryExpressID
+      if (!geomData || typeof geomData.geometryExpressID !== "number") {
+        continue;
+      }
 
       const geomID = geomData.geometryExpressID;
 
+      // Получаем массивы вершин и индексов
       const positions = ifcAPI.GetVertexArray(modelID, geomID);
       const indices = ifcAPI.GetIndexArray(modelID, geomID);
 
+      // Проверяем, что массивы существуют и имеют длину
       if (!positions || !indices) continue;
-      if (positions.length === undefined || indices.length === undefined) continue;
+      if (typeof positions.length !== "number" || typeof indices.length !== "number") continue;
+      if (positions.length === 0 || indices.length === 0) continue;
 
       const color = palette[expressID % palette.length];
       const meshId = "geom_" + geomID;
@@ -78,6 +85,7 @@
         isObject: true
       });
 
+      // Метаданные элемента
       try {
         const props = ifcAPI.GetLine(modelID, expressID);
         entities.push({ id: meshId, props });
@@ -91,6 +99,7 @@
       document.getElementById("info").innerText = "Геометрия не найдена или не поддерживается текущей сборкой API.";
     }
 
+    // Подсветка и вывод информации при клике
     viewer.cameraControl.on("picked", e => {
       const infoDiv = document.getElementById("info");
       viewer.scene.setObjectsHighlighted(viewer.scene.objects, false);
